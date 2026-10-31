@@ -15,12 +15,18 @@ export default function ValuesTab() {
   const generic = useApp((s) => s.mode === "generic");
   const openSheet = useUI((s) => s.openSheet);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    const topic = CATALOG.find((c) => c.id === id)?.topic;
+    if (topic) {
+      openSheet({ type: "add", text: topic });
+      return;
+    }
     changeValues(() => {
       const s = useApp.getState();
       if (generic) s.set({ mode: "values" });
       s.toggleValue(id);
     }, "Saved");
+  };
 
   const unselectedCatalog = generic ? CATALOG : CATALOG.filter((c) => !selectedIds.includes(c.id));
   const unselectedCustoms = generic ? customs : customs.filter((c) => !selectedIds.includes(c.id));

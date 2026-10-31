@@ -20,7 +20,7 @@ const DESCRIPTORS = [
   "UBER *TRIP",
 ];
 
-const CARD_MS = 780;
+const CARD_MS = 420;
 const STATUS = ["Mapping parent companies", "Checking ratings", "Applying your values"];
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*#&";
 
@@ -75,8 +75,8 @@ export default function LoadingPage() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     DESCRIPTORS.forEach((_, k) => k && timers.push(setTimeout(() => setI(k), k * CARD_MS)));
     const cardsEnd = DESCRIPTORS.length * CARD_MS;
-    STATUS.forEach((_, k) => timers.push(setTimeout(() => setChecks(k + 1), cardsEnd + 250 + k * 420)));
-    timers.push(setTimeout(finish, cardsEnd + 250 + STATUS.length * 420 + 650));
+    STATUS.forEach((_, k) => timers.push(setTimeout(() => setChecks(k + 1), cardsEnd + 150 + k * 240)));
+    timers.push(setTimeout(finish, cardsEnd + 150 + STATUS.length * 240 + 350));
     return () => timers.forEach(clearTimeout);
   }, [finish]);
 

@@ -32,14 +32,14 @@ export function BankSheet() {
 
   useEffect(() => {
     if (step === "connecting") {
-      const t = setTimeout(() => setStep("done"), 2000);
+      const t = setTimeout(() => setStep("done"), 700);
       return () => clearTimeout(t);
     }
     if (step === "done") {
       const t = setTimeout(() => {
         close();
         router.push("/loading");
-      }, 1000);
+      }, 450);
       return () => clearTimeout(t);
     }
   }, [step, close, router]);

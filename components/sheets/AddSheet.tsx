@@ -7,6 +7,7 @@ import { PrimaryButton, SecondaryButton } from "../ui/Buttons";
 import { Shimmer } from "../ui/AISummary";
 import { ChevronRight } from "../ui/icons";
 import { parsePreference } from "@/lib/ai/client";
+import { correctText } from "@/lib/ai/spell";
 import type { ParseResponse } from "@/lib/ai/schemas";
 import { useApp, useUI } from "@/lib/store";
 import { changeValues } from "@/lib/notify";
@@ -35,10 +36,17 @@ export function AddSheet() {
   const [history, setHistory] = useState<{ q: string; a: string }[]>([]);
   const [phase, setPhase] = useState<Phase>("input");
   const [res, setRes] = useState<ParseResponse | null>(null);
+  const [typo, setTypo] = useState<string | null>(null);
 
   const run = async (h: { q: string; a: string }[]) => {
     setPhase("understanding");
-    const r = await parsePreference(text.trim(), h, aiMode);
+    // Fix obvious typos first ("Fasr food" is fast food) and say so.
+    const fixed = correctText(text.trim());
+    if (fixed.changed && h.length === 0) {
+      setTypo(fixed.original);
+      setText(fixed.text);
+    }
+    const r = await parsePreference(fixed.text, h, aiMode);
     setRes(r);
     setPhase("answer");
   };
@@ -53,6 +61,7 @@ export function AddSheet() {
   const edit = () => {
     setHistory([]);
     setRes(null);
+    setTypo(null);
     setPhase("input");
   };
 
@@ -138,6 +147,7 @@ export function AddSheet() {
             <p className="mt-2 font-serif text-caption text-ink-2">{res.basis}</p>
             <p className="mt-4 font-serif text-body text-black">{res.summary}</p>
             <p className="mt-4 border-l-2 border-hairline pl-4 font-serif text-body italic text-ink-2">&ldquo;{text.trim()}&rdquo;</p>
+            {typo && <p className="mt-2 font-serif text-caption text-ink-2">You typed &ldquo;{typo}&rdquo;. We read it as &ldquo;{text.trim()}&rdquo;.</p>}
             <div className="mt-7 flex flex-col gap-3">
               <PrimaryButton
                 onClick={() =>
@@ -166,6 +176,7 @@ export function AddSheet() {
             </h2>
             <p className="mt-4 font-serif text-body text-black">{res.message}</p>
             <p className="mt-4 border-l-2 border-hairline pl-4 font-serif text-body italic text-ink-2">&ldquo;{text.trim()}&rdquo;</p>
+            {typo && <p className="mt-2 font-serif text-caption text-ink-2">You typed &ldquo;{typo}&rdquo;. We read it as &ldquo;{text.trim()}&rdquo;.</p>}
             <div className="mt-7 flex flex-col gap-3">
               {res.status === "unsupported" && (
                 <PrimaryButton

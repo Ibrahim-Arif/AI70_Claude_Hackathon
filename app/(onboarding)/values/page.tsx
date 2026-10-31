@@ -48,8 +48,8 @@ export default function ValuesPage() {
   const set = useApp((s) => s.set);
   const openSheet = useUI((s) => s.openSheet);
   const [sensitive, setSensitive] = useState(false);
-  const main = CATALOG.filter((c) => !c.topic);
-  const topics = CATALOG.filter((c) => c.topic);
+  const main = CATALOG.filter((c) => !c.sensitive);
+  const topics = CATALOG.filter((c) => c.sensitive);
 
   return (
     <Screen
@@ -88,7 +88,7 @@ export default function ValuesPage() {
       <LayoutGroup>
         <motion.div layout className="flex flex-1 flex-wrap content-center justify-center gap-2 py-5">
           {main.map((c) => (
-            <Chip key={c.id} label={c.rowLabel} selected={selectedIds.includes(c.id)} onClick={() => toggle(c.id)} />
+            <Chip key={c.id} label={c.rowLabel} ai={Boolean(c.topic)} selected={selectedIds.includes(c.id)} onClick={() => (c.topic ? openSheet({ type: "add", text: c.topic }) : toggle(c.id))} />
           ))}
           {sensitive &&
             topics.map((c) => (

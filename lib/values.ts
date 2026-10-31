@@ -8,6 +8,8 @@ export type CatalogEntry = {
   icon: "leaf" | "hands" | "columns" | "lock" | "paw" | "store";
   /** Contested or open-ended topics start a short AI conversation instead of toggling a fixed rule. */
   topic?: string;
+  /** Hidden behind the optional "Sensitive topics" link on the values screen. */
+  sensitive?: boolean;
   pref: Omit<Preference, "importance">;
   defaultImportance: Importance;
 };
@@ -22,9 +24,9 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: "labor",
-    rowLabel: "Worker treatment",
+    rowLabel: "Worker rights",
     icon: "hands",
-    pref: { id: "labor", label: "Worker treatment", type: "rating", rule: { kind: "rating", issue: "labor" } },
+    pref: { id: "labor", label: "Worker rights", type: "rating", rule: { kind: "rating", issue: "labor" } },
     defaultImportance: "important",
   },
   {
@@ -50,11 +52,11 @@ export const CATALOG: CatalogEntry[] = [
   },
   {
     id: "local",
-    rowLabel: "Local business",
+    rowLabel: "Shop local",
     icon: "store",
     pref: {
       id: "local",
-      label: "Support local",
+      label: "Shop local",
       type: "attribute",
       rule: { kind: "attribute", tag: "local", polarity: "prefer" },
     },
@@ -85,9 +87,18 @@ export const CATALOG: CatalogEntry[] = [
     defaultImportance: "important",
   },
   {
+    id: "lgbtq",
+    rowLabel: "LGBTQ+ rights",
+    icon: "hands",
+    topic: "LGBTQ+ rights",
+    pref: { id: "lgbtq", label: "LGBTQ+ rights", type: "unsupported" },
+    defaultImportance: "nice",
+  },
+  {
     id: "israelpalestine",
     rowLabel: "Israel and Palestine",
     icon: "columns",
+    sensitive: true,
     topic: "Israel and Palestine",
     pref: { id: "israelpalestine", label: "Israel and Palestine", type: "unsupported" },
     defaultImportance: "nice",
@@ -96,6 +107,7 @@ export const CATALOG: CatalogEntry[] = [
     id: "faith",
     rowLabel: "Faith and religion",
     icon: "hands",
+    sensitive: true,
     topic: "Faith and religion",
     pref: { id: "faith", label: "Faith and religion", type: "unsupported" },
     defaultImportance: "nice",

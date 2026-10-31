@@ -131,3 +131,29 @@ describe("insights", () => {
     expect(c.find((x) => x.pref.id === "labor")?.rating?.score).toBe(38);
   });
 });
+
+import { correctText } from "@/lib/ai/spell";
+
+describe("smarter add-your-own", () => {
+  it("fixes typos against Tally's own vocabulary and leaves normal words alone", () => {
+    expect(correctText("Fasr food").text).toBe("Fast food");
+    expect(correctText("avoid amzon").text).toBe("avoid amazon");
+    expect(correctText("I prefer not to eat at fast food chains")).toMatchObject({ changed: false });
+    expect(correctText("shop at the market").changed).toBe(false);
+  });
+  it("a typo still reaches the right result", () => {
+    expect(scriptedParse("Fasr food", [])).toMatchObject({ status: "clarify", question: "Does fast casual like Chipotle count?" });
+    expect(scriptedParse("Fasr food", [{ q: "x", a: "No" }])).toMatchObject({ status: "result", preference: { label: "Avoid fast-food chains" } });
+  });
+  it("animal fur asks how specific, then saves the specific version", () => {
+    const q = scriptedParse("animal fur", []);
+    expect(q).toMatchObject({ status: "clarify", question: "How specific do you want to be?" });
+    expect(scriptedParse("animal fur", [{ q: "x", a: "Fur and leather" }])).toMatchObject({ status: "unsupported", label: "Avoid fur and leather" });
+  });
+  it("LGBTQ+ rights maps only to data Tally has and takes no side", () => {
+    expect(scriptedParse("LGBTQ+ rights", [])).toMatchObject({ status: "clarify" });
+    expect(scriptedParse("LGBTQ+ rights", [{ q: "x", a: "Company political donations and lobbying" }])).toMatchObject({ status: "result", preference: { rule: { kind: "rating", issue: "political" } } });
+    expect(scriptedParse("LGBTQ+ rights", [{ q: "x", a: "Workplace policies for LGBTQ+ employees" }])).toMatchObject({ status: "unsupported" });
+    expect(scriptedParse("avoid businesses owned by gay people", [])).toMatchObject({ status: "declined" });
+  });
+});

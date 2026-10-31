@@ -1,4 +1,5 @@
 import { FAST_FOOD_PREF } from "@/lib/values";
+import { correctText } from "./spell";
 import type { ParseOutput, ParseResponse } from "./schemas";
 
 export const FAILED: ParseResponse = {
@@ -24,7 +25,7 @@ export function isIdentityAvoidance(text: string): boolean {
 
 /** Scripted parse for the known demo inputs. Returns null when the input isn't known. */
 export function scriptedParse(text: string, history: { q: string; a: string }[]): ParseOutput | null {
-  const t = text.toLowerCase();
+  const t = correctText(text).text.toLowerCase();
 
   if (isIdentityAvoidance(text)) return { status: "declined", message: DECLINED_MESSAGE };
 
@@ -105,7 +106,36 @@ export function scriptedParse(text: string, history: { q: string; a: string }[])
 
   // Contested topics: Tally takes no side. Ask what the person wants to look at, map only
   // what the data supports, and save the rest honestly as not tracked yet.
-  const topic = /israel|palestin|gaza/.test(t)
+  // Animal products: ask how specific the person wants to be, then save a precise value.
+  if (/\b(fur|leather|wool|down feathers?|animal[- ]derived|animal products?|cruelty|animal testing)\b/.test(t) || /\banimals?\b/.test(t)) {
+    const SPECIFIC: Record<string, string> = {
+      "Fur only": "Avoid fur",
+      "Fur and leather": "Avoid fur and leather",
+      "All animal-derived materials": "Avoid animal-derived materials",
+      "Animal testing": "Avoid brands that test on animals",
+    };
+    if (history.length === 0) {
+      return {
+        status: "clarify",
+        question: "How specific do you want to be?",
+        options: Object.keys(SPECIFIC),
+        progress: { step: 1, total: 1 },
+      };
+    }
+    const label = SPECIFIC[history[0].a] ?? `Avoid ${history[0].a.toLowerCase()}`;
+    return {
+      status: "unsupported",
+      label,
+      message: "We can't track this yet. We've saved it and will tell you when we have reliable data.",
+    };
+  }
+
+  const topic = /lgbt|queer|\bgay\b|transgender|\btrans\b|pride/.test(t)
+    ? {
+        label: "LGBTQ+ rights",
+        opts: ["Company political donations and lobbying", "Workplace policies for LGBTQ+ employees", "Supporting LGBTQ+-owned businesses"],
+      }
+    : /israel|palestin|gaza/.test(t)
     ? { label: "Israel and Palestine", opts: ["Company political donations and lobbying", "Business operations in the region", "Something else"] }
     : /christian|faith|religio|church|islam|muslim|jewish|judaism|hindu|buddhis/.test(t)
       ? { label: "Faith and religion", opts: ["Company political donations on faith-related issues", "Support for faith-based community businesses", "Something else"] }
