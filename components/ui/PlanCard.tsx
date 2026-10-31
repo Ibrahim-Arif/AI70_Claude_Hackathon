@@ -13,7 +13,7 @@ import type { Profile } from "@/lib/types";
 const usd = (n: number) => `${n < 0 ? "−" : "+"}$${Math.abs(n) % 1 ? Math.abs(n).toFixed(2) : Math.abs(n)}`;
 
 /** Optional, engine-computed moves with an AI explanation. The person picks; nothing is ranked as best. */
-export function PlanCard({ profile }: { profile: Profile }) {
+export function PlanCard({ profile, compact = false }: { profile: Profile; compact?: boolean }) {
   const aiMode = useApp((s) => s.aiMode);
   const kept = useApp((s) => s.kept);
   const openSheet = useUI((s) => s.openSheet);
@@ -31,6 +31,28 @@ export function PlanCard({ profile }: { profile: Profile }) {
 
   const plan = state?.key === key ? state.plan : undefined;
   if (plan === null) return null;
+
+  if (compact) {
+    if (plan === undefined) return <Shimmer lines={3} label="Finding your options" />;
+    return (
+      <div>
+        <ul>
+          {plan.options.slice(0, 3).map((o) => (
+            <li key={`${o.merchantId}-${o.alternative.name}`} className="border-t border-hairline first:border-t-0">
+              <button type="button" onClick={() => openSheet({ type: "merchant", id: o.merchantId })} className="flex min-h-14 w-full items-center gap-2 py-2 text-left">
+                <span className="caps min-w-0 flex-1 truncate text-label text-black">
+                  {merchantById[o.merchantId].name} → {o.alternative.name}
+                </span>
+                <span className="num rounded-tile bg-royal-tint px-2 py-1 text-micro text-royal">{usd(o.monthlyCostDelta)}</span>
+                <ChevronRight size={18} className="shrink-0 text-ink-2" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        {plan.options.length === 0 && <p className="font-serif text-body text-ink-2">Nothing to change. You&apos;re all set.</p>}
+      </div>
+    );
+  }
 
   return (
     <Card tone="white">

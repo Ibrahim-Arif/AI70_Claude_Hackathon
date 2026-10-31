@@ -3,13 +3,13 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, HomeIcon, PieChart, Search } from "./icons";
+import { CreditCard, HomeIcon, Search, TallyMarks } from "./icons";
 
 const TABS = [
   { href: "/home", label: "Dashboard", match: ["/home", "/report"], Icon: HomeIcon },
   { href: "/transactions", label: "Transactions", match: ["/transactions"], Icon: CreditCard },
   { href: "/spending", label: "Spending", match: ["/spending"], Icon: Bars },
-  { href: "/budget", label: "Budget", match: ["/budget"], Icon: PieChart },
+  { href: "/tally", label: "Tally", match: ["/tally"], Icon: TallyMarks },
   { href: "/browse", label: "Browse", match: ["/browse"], Icon: Search },
 ];
 

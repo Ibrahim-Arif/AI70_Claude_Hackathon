@@ -8,10 +8,12 @@ import { CATALOG, catalogById, FAST_FOOD_PREF } from "./values";
 import { merchantById } from "@/data/merchants";
 import { transactions } from "@/data/transactions";
 import { changedMerchants, flags, levelOf, summarize } from "./engine";
+import { applyActions, dismissOpportunity, targetProposal, type ApplyResult } from "./tally/analysis";
+import { emptyTallyState, type ActionProposal, type Ctx, type TallyState } from "./tally/types";
 
 export type AIMode = "live" | "scripted";
 
-type Persisted = {
+type Persisted = TallyState & {
   name: string;
   /** ids of selected values (catalog or custom) in display order */
   selectedIds: string[];
@@ -48,10 +50,19 @@ type Actions = {
   markEssential: (id: string) => void;
   fillPersona: (labor?: Importance) => void;
   fillSam: () => void;
+  /** Validate and apply approved Tally proposals. Nothing changes without a call to this. */
+  tallyApply: (actions: ActionProposal[], source: string) => ApplyResult;
+  tallyDismiss: (id: string) => void;
+  tallyEditTarget: (category: string, amount: number) => string[];
+  tallyRemoveTarget: (category: string) => void;
+  tallyRemoveReview: (merchantId: string) => void;
+  tallyRemoveConsideration: (merchantId: string, alt: string) => void;
+  tallyForget: (id: string) => void;
   reset: () => void;
 };
 
 export const initialState: Persisted = {
+  ...emptyTallyState,
   name: "",
   selectedIds: [],
   customs: [],
@@ -127,6 +138,36 @@ export const useApp = create<Persisted & Actions>()(
           mode: "values",
           onboarded: true,
         }),
+      tallyApply: (actions, source) => {
+        const s = get();
+        const result = applyActions(s, ctxOf(s), actions, new Date().toISOString(), source);
+        set({ ...result.state, ...(result.budget !== undefined ? { budget: result.budget } : {}) });
+        return result;
+      },
+      tallyDismiss: (id) => set((s) => dismissOpportunity(s, id, new Date().toISOString())),
+      tallyEditTarget: (category, amount) => {
+        const s = get();
+        const without = { ...s.targets };
+        delete without[category];
+        const base: TallyState = { ...s, targets: without };
+        const r = applyActions(base, ctxOf({ ...s, targets: without }), [targetProposal(category, Math.round(amount))], new Date().toISOString(), "edited");
+        if (r.rejected.length) return r.rejected[0].errors;
+        set({ targets: r.state.targets, decisions: r.state.decisions });
+        return [];
+      },
+      tallyRemoveTarget: (category) =>
+        set((s) => {
+          const targets = { ...s.targets };
+          delete targets[category];
+          return { targets };
+        }),
+      tallyRemoveReview: (merchantId) => set((s) => ({ reviewList: s.reviewList.filter((x) => x !== merchantId) })),
+      tallyRemoveConsideration: (merchantId, alt) =>
+        set((s) => ({ consideration: s.consideration.filter((c) => !(c.merchantId === merchantId && c.alt === alt)) })),
+      tallyForget: (id) =>
+        set((s) => ({
+          dismissed: s.dismissed.filter((d) => (id === "values" ? !d.startsWith("values:") : d !== id)),
+        })),
       reset: () => set({ ...initialState, aiMode: get().aiMode }),
     }),
     {
@@ -134,12 +175,26 @@ export const useApp = create<Persisted & Actions>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { set, toggleValue, addCustom, setImportance, setWeight, keep, markEssential, fillPersona, fillSam, reset, ...rest } = s;
+        const { set, toggleValue, addCustom, setImportance, setWeight, keep, markEssential, fillPersona, fillSam, tallyApply, tallyDismiss, tallyEditTarget, tallyRemoveTarget, tallyRemoveReview, tallyRemoveConsideration, tallyForget, reset, ...rest } = s;
         return rest;
       },
     },
   ),
 );
+
+/** The inputs Tally's pure logic needs, read from app state. */
+export function ctxOf(s: Persisted): Ctx {
+  return {
+    targets: s.targets,
+    reviewList: s.reviewList,
+    consideration: s.consideration,
+    decisions: s.decisions,
+    dismissed: s.dismissed,
+    kept: s.kept,
+    budget: s.budget,
+    profile: buildProfile(s),
+  };
+}
 
 function defaultImportance(id: string): Importance {
   return catalogById[id]?.defaultImportance ?? "important";
@@ -229,6 +284,7 @@ export type Sheet =
   | { type: "howcalc" }
   | { type: "bank" }
   | { type: "karma" }
+  | { type: "tallyConfirm"; title: string; source: string; actions: ActionProposal[] }
   | { type: "notifications" }
   | null;
 

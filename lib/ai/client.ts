@@ -147,3 +147,11 @@ export async function getPlan(profile: Profile, kept: string[], mode: AIMode): P
 export async function getBrowseIntent(query: string, mode: AIMode): Promise<BrowseIntent | null> {
   return atLeast(postJson<BrowseIntent>("/api/browse", { query, mode }, 10000).catch(() => null));
 }
+
+// ---------------------------------------------------------------- ask tally
+
+export type TallyReply = { intent: { intent: string }; answer: import("./tally").TallyAnswer; narrative: string; source: "live" | "scripted" };
+
+export async function askTally(message: string, ctx: import("@/lib/tally/types").Ctx, mode: AIMode): Promise<TallyReply | null> {
+  return atLeast(postJson<TallyReply>("/api/tally", { message, ctx, mode }, 15000).catch(() => null), 700);
+}

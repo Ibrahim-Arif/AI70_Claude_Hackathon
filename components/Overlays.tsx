@@ -6,6 +6,7 @@ import { AddSheet } from "./sheets/AddSheet";
 import { BankSheet } from "./sheets/BankSheet";
 import { GoalSheet } from "./sheets/GoalSheet";
 import { MerchantSheet } from "./sheets/MerchantSheet";
+import { TallyConfirmSheet } from "./sheets/TallyConfirmSheet";
 import { DemoPanel, HowCalcSheet, KarmaSheet, NotificationsSheet, SettingsSheet } from "./sheets/SmallSheets";
 import { useUI } from "@/lib/store";
 import { merchantById } from "@/data/merchants";
@@ -52,6 +53,12 @@ export function Overlays() {
         key = "howcalc";
         label = "How we calculate";
         content = <HowCalcSheet />;
+        break;
+      case "tallyConfirm":
+        key = `tc-${sheet.title}`;
+        label = "Review and approve";
+        content = <TallyConfirmSheet title={sheet.title} source={sheet.source} actions={sheet.actions} />;
+        tall = true;
         break;
       case "karma":
         key = "karma";

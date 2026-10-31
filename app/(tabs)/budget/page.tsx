@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { Screen } from "@/components/Screen";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -47,6 +48,7 @@ function Donut({ parts }: { parts: { name: string; value: number }[] }) {
 }
 
 export default function BudgetPage() {
+  const router = useRouter();
   const d = useDerived();
   const budget = useApp((s) => s.budget);
   const set = useApp((s) => s.set);
@@ -65,7 +67,10 @@ export default function BudgetPage() {
 
   return (
     <Screen tabs>
-      <h1 className="head mt-2 text-h2 text-black">Budget</h1>
+      <h1 className="head mt-2 text-h2 text-black">Spending breakdown</h1>
+      <button type="button" onClick={() => router.push("/tally")} className="mt-1 min-h-11 font-serif text-caption italic text-royal underline underline-offset-4">
+        Back to Tally
+      </button>
       <div className="mt-5 flex flex-col gap-3">
         <Card>
           <CardHeader label="Monthly budget" chevron={false} />

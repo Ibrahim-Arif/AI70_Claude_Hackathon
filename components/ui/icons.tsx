@@ -98,3 +98,39 @@ export const PieChart = (p: P) => (
 export const HomeIcon = (p: P) => (
   <svg {...base(p)}><path d="M4 11l8-6 8 6v9H4z" /><path d="M10 20v-5h4v5" /></svg>
 );
+
+/** Four strokes and the slash: an actual tally mark. */
+export const TallyMarks = (p: P) => (
+  <svg {...base(p)}><path d="M6 5v14M10 5v14M14 5v14M18 5v14M3.5 16.5l17-9" /></svg>
+);
+
+export const Cup = (p: P) => (
+  <svg {...base(p)}><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V8zM16 9.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5v2M12 3.5v2" /></svg>
+);
+export const Fork = (p: P) => (
+  <svg {...base(p)}><path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M7 3v5M15 21V3c2 1.5 3 4 3 7h-3" /></svg>
+);
+export const Bag = (p: P) => (
+  <svg {...base(p)}><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" /></svg>
+);
+export const Car = (p: P) => (
+  <svg {...base(p)}><path d="M4 15v-3l2-5h12l2 5v3H4zM4 15v3M20 15v3M7 12h10" /><circle cx="8" cy="15" r="0.6" /><circle cx="16" cy="15" r="0.6" /></svg>
+);
+export const Repeat = (p: P) => (
+  <svg {...base(p)}><path d="M4 11V9a3 3 0 0 1 3-3h11l-3-3M20 13v2a3 3 0 0 1-3 3H6l3 3" /></svg>
+);
+export const Close = (p: P) => (
+  <svg {...base(p)}><path d="M6 6l12 12M18 6L6 18" /></svg>
+);
+export const Doc = (p: P) => (
+  <svg {...base(p)}><path d="M7 3h7l4 4v14H7V3zM14 3v4h4M9.5 12h5M9.5 16h5" /></svg>
+);
+export const Info = (p: P) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.2" /></svg>
+);
+export const ArrowRight = (p: P) => (
+  <svg {...base(p)}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+);
+export const Eye = (p: P) => (
+  <svg {...base(p)}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="2.8" /></svg>
+);

@@ -9,7 +9,7 @@ import type { Label, Merchant, Preference, Profile } from "./types";
 import { catalogById } from "./values";
 
 export type FindingKind = "conflict" | "mixed" | "gap";
-export type Finding = { merchantId: string; kind: FindingKind; label: Label; headline: string; detail: string; spend: number };
+export type Finding = { merchantId: string; kind: FindingKind; label: Label; headline: string; detail: string; /** A few words, for scanning. */ short: string; spend: number };
 
 function ratingFor(m: Merchant, p: Preference) {
   const rule = p.rule;
@@ -17,22 +17,23 @@ function ratingFor(m: Merchant, p: Preference) {
 }
 
 /** One plain-language line per flagged merchant, built from the rules engine's own reasons. */
-export function describeFinding(m: Merchant, result: LabelResult): { headline: string; detail: string } {
+export function describeFinding(m: Merchant, result: LabelResult): { headline: string; detail: string; short: string } {
   const p = result.reasons[0];
   const owner = hasDifferentParent(m) ? ` Owned by ${parentName(m)}.` : "";
-  if (!p) return { headline: "Worth a closer look", detail: owner.trim() };
+  if (!p) return { headline: "Worth a closer look", detail: owner.trim(), short: "Worth a look" };
   const r = ratingFor(m, p);
   if (result.label === "Unknown") {
-    return { headline: `Not enough evidence on ${p.label.toLowerCase()}`, detail: `No reliable rating yet.${owner}` };
+    return { headline: `Not enough evidence on ${p.label.toLowerCase()}`, detail: `No reliable rating yet.${owner}`, short: `${p.label}: no rating` };
   }
   if (r) {
     return {
       headline: `${p.label}: rated ${r.score} out of 100`,
       detail: `${r.scope === "parent" ? "Describes the parent company." : "Describes this merchant."}${owner}`,
+      short: `${p.label}: ${result.label === "Conflicts" ? "far below" : "below"}`,
     };
   }
-  if (p.rule?.kind === "entity") return { headline: `Parent-company connection: ${parentName(m)}`, detail: `You chose "${p.label}".` };
-  return { headline: `Matches "${p.label}"`, detail: `Based on its category.${owner}` };
+  if (p.rule?.kind === "entity") return { headline: `Parent-company connection: ${parentName(m)}`, detail: `You chose "${p.label}".`, short: `Owned by ${parentName(m)}` };
+  return { headline: `Matches "${p.label}"`, detail: `Based on its category.${owner}`, short: p.label };
 }
 
 /** Up to `limit` findings: conflicts first, then mixed, then evidence gaps; ordered by spend within each. */
