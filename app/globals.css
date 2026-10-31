@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Tally design tokens. Tailwind v4 is configured in CSS (this file replaces
+  tailwind.config). The default palette is cleared so only brand colors exist.
+*/
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-cream: #fffbf3;
+  --color-sky: #3199dd;
+  --color-royal: #3171dd;
+  --color-black: #000000;
+  --color-ink: #000000;
+  --color-ink-2: #4a453d;
+  --color-ink-3: #7a7468;
+  --color-royal-tint: #e3ecfa;
+  --color-sky-tint: #e0f0fa;
+  --color-fill: #f1ece2;
+  --color-hairline: #e8e1d3;
+  --color-icon-tile: #ddd5c6;
+  --color-aligned: #3171dd;
+  --color-mixed: #d4962a;
+  --color-conflicts: #e05a2b;
+  --color-unknown: #7a7468;
+  --color-transparent: transparent;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-capriola), system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Type scale */
+  --text-h1: 38px;
+  --text-h1--line-height: 40px;
+  --text-h2: 28px;
+  --text-h2--line-height: 32px;
+  --text-label: 14px;
+  --text-label--line-height: 18px;
+  --text-hero: 60px;
+  --text-hero--line-height: 60px;
+  --text-cardnum: 36px;
+  --text-cardnum--line-height: 40px;
+  --text-body: 19px;
+  --text-body--line-height: 27px;
+  --text-caption: 15px;
+  --text-caption--line-height: 21px;
+  --text-tab: 11px;
+  --text-tab--line-height: 14px;
+  /* Component-specific sizes called for in the spec */
+  --text-row: 17px;
+  --text-row--line-height: 22px;
+  --text-btn: 16px;
+  --text-btn--line-height: 20px;
+  --text-seg: 13px;
+  --text-seg--line-height: 16px;
+  --text-micro: 12px;
+  --text-micro--line-height: 16px;
+  --text-status: 14px;
+  --text-status--line-height: 18px;
+  --text-summary: 17px;
+  --text-summary--line-height: 25px;
+
+  --radius-card: 20px;
+  --radius-row: 16px;
+  --radius-tile: 10px;
+  --radius-sheet: 28px;
+  --radius-toast: 14px;
+  --radius-frame: 44px;
+
+  --tracking-head: -0.02em;
+  --tracking-lbl: 0.05em;
+
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-spin-slow: spin 1.1s linear infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 }
 
+:root {
+  --cream: #fffbf3;
+  --royal: #3171dd;
+  --sky: #3199dd;
+  --sky-tint: #e0f0fa;
+  --tabbar-h: 72px;
+  color-scheme: light;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: #000;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+* {
+  font-synthesis: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Capriola caps helpers */
+.caps {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+}
+.head {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+.num {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.shimmer-bar {
+  background: linear-gradient(90deg, #f1ece2 0%, #e8e1d3 50%, #f1ece2 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+input,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--royal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-bar {
+    animation: none;
+  }
 }
