@@ -2,6 +2,8 @@
 
 A mobile-first web demo of **Tally**, a personal finance app that shows which companies your money reaches and how that matches values you define yourself. Everything runs on illustrative mock data. Two small AI features call Claude from server routes, and both have scripted fallbacks, so the whole demo works with no API key.
 
+> Picking this project up, or handing it to an AI agent? Start with [docs/HANDOFF.md](docs/HANDOFF.md).
+
 ## Setup
 
 ```bash
