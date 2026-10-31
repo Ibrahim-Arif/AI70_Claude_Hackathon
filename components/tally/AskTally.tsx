@@ -109,7 +109,7 @@ export function AskResult({ reply, onClose }: { reply: TallyReply | null; onClos
         </ul>
       ) : (
         <ul className="mt-2 flex flex-col gap-1.5">
-          {answer.bullets.slice(0, 3).map((b) => (
+          {answer.bullets.slice(0, 4).map((b) => (
             <li key={b} className="font-serif text-body text-black">{b}</li>
           ))}
         </ul>

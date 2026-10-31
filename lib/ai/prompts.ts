@@ -91,7 +91,8 @@ Return strict JSON only: {"tags": string[], "summary": string}
 
 export const TALLY_INTENT_SYSTEM = `You read a person's request to Tally, a spending assistant, into a small JSON object. You do not answer the question.
 
-Return strict JSON only: {"intent": "save_amount" | "category_check" | "values" | "other", "amount"?: number, "category"?: string}
+Return strict JSON only: {"intent": "save_amount" | "category_check" | "values" | "afford" | "other", "amount"?: number, "category"?: string}
+- afford: they ask whether they can afford or how to pay for a specific purchase. Include "amount" as the price in dollars ("7k" is 7000).
 - save_amount: they want to save or free up a dollar amount. Include "amount" (dollars).
 - category_check: they ask about their spending in one category. Include "category", exactly one of: Coffee, Dining out, Groceries, Shopping, Getting around, Subscriptions, Health.
 - values: they want spending that fits their values, or cheaper or better alternatives.

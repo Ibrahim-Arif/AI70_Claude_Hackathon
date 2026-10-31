@@ -152,3 +152,28 @@ describe("ask tally", () => {
     expect(verifyNarrative({ narrative: "Here is a plan worked out from your spending. Nothing changes until you approve." }, a)).toMatch(/plan worked out/);
   });
 });
+
+import { parseMoney } from "@/lib/ai/tally";
+
+describe("can I afford it", () => {
+  it("reads money in the ways people type it", () => {
+    expect(parseMoney("can i afford a 7k car")).toBe(7000);
+    expect(parseMoney("a $7,000 car")).toBe(7000);
+    expect(parseMoney("7000 dollars")).toBe(7000);
+    expect(parseMoney("no number here")).toBeUndefined();
+  });
+  it("understands the question offline", () => {
+    expect(scriptedIntent("can i afford a 7k car")).toEqual({ intent: "afford", amount: 7000 });
+    expect(scriptedIntent("save $100 this month").intent).toBe("save_amount");
+  });
+  it("answers with real arithmetic and never claims what it can't know", () => {
+    const a = buildAnswer({ intent: "afford", amount: 7000 }, ctx());
+    const t = a.bullets.join(" ");
+    expect(a.title).toBe("A $7,000 purchase");
+    expect(t).toMatch(/3\.2 times your \$2,200/);
+    expect(t).toMatch(/\$200 left this month/);
+    expect(t).toMatch(/35 months/);
+    expect(t).toMatch(/can't see your savings or income/);
+    expect(t).not.toMatch(/(?<!whether )you (can|cannot|can't) afford/i);
+  });
+});

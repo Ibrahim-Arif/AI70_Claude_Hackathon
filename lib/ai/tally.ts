@@ -16,8 +16,8 @@ import type { ActionProposal, Ctx, SavingsPlan } from "@/lib/tally/types";
 export const CATEGORIES = ["Coffee", "Dining out", "Groceries", "Shopping", "Getting around", "Subscriptions", "Health"] as const;
 
 export const IntentSchema = z.object({
-  intent: z.enum(["save_amount", "category_check", "values", "other"]),
-  amount: z.number().min(10).max(5000).optional(),
+  intent: z.enum(["save_amount", "category_check", "values", "afford", "other"]),
+  amount: z.number().min(10).max(1_000_000).optional(),
   category: z.enum(CATEGORIES).optional(),
 });
 export type Intent = z.infer<typeof IntentSchema>;
@@ -31,12 +31,20 @@ const CATEGORY_WORDS: [RegExp, (typeof CATEGORIES)[number]][] = [
   [/subscri|streaming|netflix|spotify/, "Subscriptions"],
 ];
 
+/** "7k", "$7,000", "7000 dollars" all become 7000. */
+export function parseMoney(text: string): number | undefined {
+  const m = text.toLowerCase().match(/\$?\s?(\d[\d,]*(?:\.\d+)?)\s?(k|grand|thousand)?\b/);
+  if (!m) return undefined;
+  const n = Number(m[1].replace(/,/g, "")) * (m[2] ? 1000 : 1);
+  return Number.isFinite(n) && n >= 10 ? Math.round(n) : undefined;
+}
+
 /** Offline reading of the request. Used when there's no API key or the model fails. */
 export function scriptedIntent(message: string): Intent {
   const t = message.toLowerCase();
-  const amt = t.match(/\$\s?(\d{2,4})|(\d{2,4})\s?(?:dollars|bucks)/);
-  const amount = amt ? Number(amt[1] ?? amt[2]) : undefined;
-  if (amount && /(save|cut|free up|spend (?:less|\$)|reduce)/.test(t)) return { intent: "save_amount", amount };
+  const amount = parseMoney(t);
+  if (amount && /(afford|can i buy|save up for|buy a|purchase|pay for)/.test(t)) return { intent: "afford", amount: Math.min(amount, 1_000_000) };
+  if (amount && /(save|cut|free up|spend (?:less|\$)|reduce)/.test(t)) return { intent: "save_amount", amount: Math.min(amount, 5000) };
   if (/(in line with|align|my values|worker|climate|ethic|alternative|cheaper)/.test(t)) return { intent: "values" };
   const cat = CATEGORY_WORDS.find(([re]) => re.test(t))?.[1];
   if (cat) return { intent: "category_check", category: cat };
@@ -51,10 +59,25 @@ export type TallyAnswer = {
   proposals?: ActionProposal[];
 };
 
-const money = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
 /** Deterministic answer. All figures and proposals come from here. */
 export function buildAnswer(intent: Intent, ctx: Ctx): TallyAnswer {
+  if (intent.intent === "afford") {
+    const price = intent.amount ?? 0;
+    const left = round2(ctx.budget - totalSpend());
+    const plan = planSavings(100, ctx);
+    const bullets: string[] = [`That's about ${(price / ctx.budget).toFixed(1)} times your ${money(ctx.budget)} monthly budget.`];
+    if (left > 0) bullets.push(`You have ${money(left)} left this month. Setting that aside each month, it would take about ${Math.ceil(price / left)} months.`);
+    else bullets.push(`You're ${money(-left)} over your monthly budget right now, so there's nothing left over to set aside yet.`);
+    if (plan.committed > 0) {
+      const room = Math.max(0, left) + plan.committed;
+      bullets.push(`Freeing up ${money(plan.committed)} more a month with Tally's plan would bring that to about ${Math.ceil(price / room)} months.`);
+    }
+    bullets.push("Tally can't see your savings or income, so it can't say whether you can afford it. That's your call.");
+    return { title: `A ${money(price)} purchase`, bullets, proposals: plan.items.length ? plan.items : undefined };
+  }
+
   if (intent.intent === "save_amount") {
     const plan = planSavings(intent.amount ?? 100, ctx);
     const bullets: string[] = [];
@@ -93,8 +116,8 @@ export function buildAnswer(intent: Intent, ctx: Ctx): TallyAnswer {
   }
 
   return {
-    title: "Here's what Tally can do",
-    bullets: ['Build a plan to save a set amount, like "Save $100 this month".', "Look at a category, like coffee or dining out.", "Find moves that fit your values without raising your spending."],
+    title: "I can help with these",
+    bullets: ['Build a savings plan: "Save $100 this month"', 'Check a category: "Am I spending too much on food?"', 'Plan a purchase: "Can I afford a $7,000 car?"', 'Find moves that fit your values without raising your spending'],
   };
 }
 
