@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "../ui/Buttons";
 import { Shimmer } from "../ui/AISummary";
 import { ChevronRight } from "../ui/icons";
@@ -30,7 +30,8 @@ export function AddSheet() {
   const addCustom = useApp((s) => s.addCustom);
   const close = useUI((s) => s.closeSheet);
   const path = usePathname();
-  const [text, setText] = useState("");
+  const initialText = useUI((s) => (s.sheet?.type === "add" ? s.sheet.text ?? "" : ""));
+  const [text, setText] = useState(initialText);
   const [history, setHistory] = useState<{ q: string; a: string }[]>([]);
   const [phase, setPhase] = useState<Phase>("input");
   const [res, setRes] = useState<ParseResponse | null>(null);
@@ -41,6 +42,13 @@ export function AddSheet() {
     setRes(r);
     setPhase("answer");
   };
+
+  useEffect(() => {
+    if (!initialText) return;
+    const t = setTimeout(() => void run([]), 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const edit = () => {
     setHistory([]);

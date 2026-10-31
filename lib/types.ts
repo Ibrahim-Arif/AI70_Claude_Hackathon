@@ -44,6 +44,8 @@ export type Preference = {
   type: "rating" | "attribute" | "entity" | "unsupported";
   rule?: PreferenceRule;
   importance: Importance;
+  /** 0 to 100. Nice, Important and Dealbreaker are reference marks on this scale (0, 50, 100), not ranges. */
+  weight?: number;
   clarifications?: { q: string; a: string }[];
 };
 

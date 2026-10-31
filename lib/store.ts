@@ -7,7 +7,7 @@ import type { Goal, Importance, Preference, PriceBudget, Profile } from "./types
 import { CATALOG, catalogById, FAST_FOOD_PREF } from "./values";
 import { merchantById } from "@/data/merchants";
 import { transactions } from "@/data/transactions";
-import { changedMerchants, flags, summarize } from "./engine";
+import { changedMerchants, flags, levelOf, summarize } from "./engine";
 
 export type AIMode = "live" | "scripted";
 
@@ -18,10 +18,16 @@ type Persisted = {
   /** custom preferences created through the Add sheet */
   customs: Omit<Preference, "importance">[];
   importance: Record<string, Importance>;
+  /** Free-sliding importance, 0 to 100. Takes precedence over `importance` when set. */
+  weights: Record<string, number>;
   maxPriceIncreasePct: PriceBudget;
   mode: "values" | "generic";
   onboarded: boolean;
   kept: string[];
+  /** Monthly spending target in dollars. */
+  budget: number;
+  /** Subset of kept: purchases the person marked as a need. */
+  essential: string[];
   goal: Goal | null;
   aiMode: AIMode;
   /** What the user last saw on Home (count-ups start here) */
@@ -37,8 +43,11 @@ type Actions = {
   toggleValue: (id: string) => void;
   addCustom: (pref: Omit<Preference, "importance">) => void;
   setImportance: (id: string, imp: Importance) => void;
+  setWeight: (id: string, weight: number) => void;
   keep: (id: string) => void;
+  markEssential: (id: string) => void;
   fillPersona: (labor?: Importance) => void;
+  fillSam: () => void;
   reset: () => void;
 };
 
@@ -47,10 +56,13 @@ export const initialState: Persisted = {
   selectedIds: [],
   customs: [],
   importance: {},
+  weights: {},
   maxPriceIncreasePct: 5,
   mode: "values",
   onboarded: false,
   kept: [],
+  essential: [],
+  budget: 2200,
   goal: null,
   aiMode: "live",
   lastSeen: null,
@@ -76,8 +88,33 @@ export const useApp = create<Persisted & Actions>()(
           selectedIds: s.selectedIds.includes(pref.id) ? s.selectedIds : [...s.selectedIds, pref.id],
           importance: { ...s.importance, [pref.id]: s.importance[pref.id] ?? "important" },
         })),
-      setImportance: (id, imp) => set((s) => ({ importance: { ...s.importance, [id]: imp } })),
+      setImportance: (id, imp) =>
+        set((s) => {
+          const { [id]: _drop, ...weights } = s.weights; // eslint-disable-line @typescript-eslint/no-unused-vars
+          return { importance: { ...s.importance, [id]: imp }, weights };
+        }),
+      setWeight: (id, weight) =>
+        set((s) => ({
+          weights: { ...s.weights, [id]: Math.round(weight) },
+          importance: { ...s.importance, [id]: levelOf(weight) },
+        })),
       keep: (id) => set((s) => ({ kept: s.kept.includes(id) ? s.kept : [...s.kept, id] })),
+      markEssential: (id) =>
+        set((s) => ({
+          kept: s.kept.includes(id) ? s.kept : [...s.kept, id],
+          essential: s.essential.includes(id) ? s.essential : [...s.essential, id],
+        })),
+      fillSam: () =>
+        set({
+          ...initialState,
+          aiMode: get().aiMode,
+          name: "Sam",
+          selectedIds: ["labor", "climate"],
+          importance: { labor: "important", climate: "nice" },
+          maxPriceIncreasePct: 0,
+          mode: "values",
+          onboarded: true,
+        }),
       fillPersona: (labor = "important") =>
         set({
           ...initialState,
@@ -97,7 +134,7 @@ export const useApp = create<Persisted & Actions>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { set, toggleValue, addCustom, setImportance, keep, fillPersona, reset, ...rest } = s;
+        const { set, toggleValue, addCustom, setImportance, setWeight, keep, markEssential, fillPersona, fillSam, reset, ...rest } = s;
         return rest;
       },
     },
@@ -109,7 +146,9 @@ function defaultImportance(id: string): Importance {
 }
 
 /** Build the engine Profile from store state. */
-export function buildProfile(s: Pick<Persisted, "name" | "selectedIds" | "customs" | "importance" | "maxPriceIncreasePct" | "mode">): Profile {
+export function buildProfile(
+  s: Pick<Persisted, "name" | "selectedIds" | "customs" | "importance" | "maxPriceIncreasePct" | "mode"> & { weights?: Record<string, number> },
+): Profile {
   const all: Record<string, Omit<Preference, "importance">> = {
     ...Object.fromEntries(CATALOG.map((c) => [c.id, c.pref])),
     ...Object.fromEntries(s.customs.map((c) => [c.id, c])),
@@ -119,7 +158,12 @@ export function buildProfile(s: Pick<Persisted, "name" | "selectedIds" | "custom
       ? []
       : s.selectedIds
           .filter((id) => all[id])
-          .map((id) => ({ ...all[id], importance: s.importance[id] ?? defaultImportance(id) }));
+          .map((id) => {
+            const weight = s.weights?.[id];
+            return weight === undefined
+              ? { ...all[id], importance: s.importance[id] ?? defaultImportance(id) }
+              : { ...all[id], importance: levelOf(weight), weight };
+          });
   return { name: s.name, preferences, maxPriceIncreasePct: s.maxPriceIncreasePct };
 }
 
@@ -128,10 +172,11 @@ export function useProfile(): Profile {
   const selectedIds = useApp((s) => s.selectedIds);
   const customs = useApp((s) => s.customs);
   const importance = useApp((s) => s.importance);
+  const weights = useApp((s) => s.weights);
   const maxPriceIncreasePct = useApp((s) => s.maxPriceIncreasePct);
   const mode = useApp((s) => s.mode);
   // buildProfile is cheap; keep identity stable per input set
-  return useMemoProfile(name, selectedIds, customs, importance, maxPriceIncreasePct, mode);
+  return useMemoProfile(name, selectedIds, customs, importance, weights, maxPriceIncreasePct, mode);
 }
 
 function useMemoProfile(
@@ -139,12 +184,13 @@ function useMemoProfile(
   selectedIds: string[],
   customs: Omit<Preference, "importance">[],
   importance: Record<string, Importance>,
+  weights: Record<string, number>,
   maxPriceIncreasePct: PriceBudget,
   mode: "values" | "generic",
 ) {
   return useMemo(
-    () => buildProfile({ name, selectedIds, customs, importance, maxPriceIncreasePct, mode }),
-    [name, selectedIds, customs, importance, maxPriceIncreasePct, mode],
+    () => buildProfile({ name, selectedIds, customs, importance, weights, maxPriceIncreasePct, mode }),
+    [name, selectedIds, customs, importance, weights, maxPriceIncreasePct, mode],
   );
 }
 
@@ -177,11 +223,13 @@ export function snapshot(profile: Profile, kept: string[]): Snapshot {
 export type Sheet =
   | { type: "merchant"; id: string }
   | { type: "goal"; merchantId: string }
-  | { type: "add" }
+  | { type: "add"; text?: string }
   | { type: "settings" }
   | { type: "demo" }
   | { type: "howcalc" }
   | { type: "bank" }
+  | { type: "karma" }
+  | { type: "notifications" }
   | null;
 
 export type Toast = { id: number; text: string; action?: { label: string; href: string; onClick?: () => void } };

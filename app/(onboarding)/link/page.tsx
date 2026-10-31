@@ -7,9 +7,9 @@ import { Lock, Shield, Trash } from "@/components/ui/icons";
 import { useUI } from "@/lib/store";
 
 const ROWS = [
-  { icon: Shield, text: "We never sell your data.", bg: "#E3ECFA", fg: "#3171DD" },
-  { icon: Trash, text: "Encrypted, deletable in one tap.", bg: "#FAEFD9", fg: "#B77D1C" },
-  { icon: Lock, text: "Secure login through Plaid.", bg: "#E0F0FA", fg: "#3199DD" },
+  { icon: Shield, text: "We never sell your data.", bg: "#E6EAFA", fg: "#1D3BC4" },
+  { icon: Trash, text: "Encrypted, deletable in one tap.", bg: "#FBF1CC", fg: "#9A7400" },
+  { icon: Lock, text: "Secure login through Plaid.", bg: "#E4EDFB", fg: "#2D6FD6" },
 ];
 
 export default function LinkPage() {
@@ -18,7 +18,7 @@ export default function LinkPage() {
     <Screen footer={<PrimaryButton onClick={() => openSheet({ type: "bank" })}>Link with Plaid</PrimaryButton>}>
       <BackButton />
       <div className="mt-4">
-        <HalftoneCompass size={96} color="#3171DD" accent="#3199DD" />
+        <HalftoneCompass size={96} color="#1D3BC4" accent="#2D6FD6" />
       </div>
       <h1 className="head mt-6 text-h1 text-black">
         Link your <span className="text-royal">bank</span>

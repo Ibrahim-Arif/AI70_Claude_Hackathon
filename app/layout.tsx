@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Capriola, Newsreader } from "next/font/google";
+import { Archivo, Capriola, Newsreader } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 
 const capriola = Capriola({ variable: "--font-capriola", subsets: ["latin"], weight: "400" });
+const archivo = Archivo({ variable: "--font-num", subsets: ["latin"], weight: "700" });
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
@@ -20,12 +21,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#FFFBF3",
+  themeColor: "#F7F6F3",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${capriola.variable} ${newsreader.variable}`}>
+    <html lang="en" className={`${capriola.variable} ${newsreader.variable} ${archivo.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>

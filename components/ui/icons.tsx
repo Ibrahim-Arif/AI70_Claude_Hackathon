@@ -82,3 +82,19 @@ export const Download = (p: P) => (
 );
 
 export const VALUE_ICONS = { leaf: Leaf, hands: Hands, columns: Columns, lock: Lock, paw: Paw, store: Store };
+
+export const Bell = (p: P) => (
+  <svg {...base(p)}><path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15L6 17zM10 21h4" /></svg>
+);
+export const Search = (p: P) => (
+  <svg {...base(p)}><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+);
+export const CreditCard = (p: P) => (
+  <svg {...base(p)}><rect x="3" y="6" width="18" height="12" rx="2.5" /><path d="M3 10h18M7 15h3" /></svg>
+);
+export const PieChart = (p: P) => (
+  <svg {...base(p)}><path d="M12 3a9 9 0 1 0 9 9h-9V3z" /><path d="M15 3.5A9 9 0 0 1 20.5 9H15V3.5z" /></svg>
+);
+export const HomeIcon = (p: P) => (
+  <svg {...base(p)}><path d="M4 11l8-6 8 6v9H4z" /><path d="M10 20v-5h4v5" /></svg>
+);

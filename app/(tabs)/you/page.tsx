@@ -36,11 +36,7 @@ export default function ValuesTab() {
         {!generic && (
           <motion.div layout className="mt-8">
             <ImportanceBlocks
-              onImportance={(id, imp) => changeValues(() => useApp.getState().setImportance(id, imp))}
-              onBudget={(pct) => {
-                useApp.getState().set({ maxPriceIncreasePct: pct });
-                useUI.getState().showToast(`Alternatives now show options within +${pct}%.`);
-              }}
+              onWeight={(id, w) => changeValues(() => useApp.getState().setWeight(id, w))}
               onRemove={(id) => changeValues(() => useApp.getState().toggleValue(id), "Removed")}
             />
           </motion.div>

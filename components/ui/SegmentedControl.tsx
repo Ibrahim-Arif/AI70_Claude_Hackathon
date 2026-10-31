@@ -16,7 +16,7 @@ export function SegmentedControl<T extends string | number>({
 }) {
   const id = useId();
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="flex h-12 w-full rounded-full bg-fill p-1">
+    <div role="radiogroup" aria-label={ariaLabel} className="flex h-12 w-full rounded-pill bg-fill p-1">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -27,12 +27,12 @@ export function SegmentedControl<T extends string | number>({
             aria-checked={active}
             whileTap={{ scale: 0.98 }}
             onClick={() => onChange(o.value)}
-            className="caps relative min-h-10 flex-1 rounded-full text-seg tracking-[0.02em] text-black"
+            className="caps relative min-h-10 flex-1 rounded-pill text-seg tracking-[0.02em] text-black"
           >
             {active && (
               <motion.span
                 layoutId={`seg-${id}`}
-                className="absolute inset-0 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                className="absolute inset-0 rounded-pill bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                 transition={{ type: "spring", stiffness: 400, damping: 34 }}
               />
             )}

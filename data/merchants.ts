@@ -96,7 +96,7 @@ const ROWS: Row[] = [
     political: [26, "2026-03"], privacy: [60, "2026-01"],
   },
   {
-    id: "hm", name: "H&M", parentId: "hm", category: "Clothing", tags: ["clothing"],
+    id: "hm", name: "H&M", parentId: "hm", category: "Clothing", tags: ["clothing", "fast_fashion"],
     climate: [45, "2026-03"], labor: [27, "2026-01"], governance: [63, "2025-12"],
     political: [58, "2026-02"], privacy: [62, "2026-02"],
   },

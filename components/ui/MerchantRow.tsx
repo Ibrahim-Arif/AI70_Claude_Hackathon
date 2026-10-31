@@ -12,7 +12,7 @@ export function Monogram({ name, size = 44, label }: { name: string; size?: numb
   return (
     <span
       aria-hidden
-      style={{ width: size, height: size, backgroundColor: label ? LABEL_TINT[label] : "#DDD5C6" }}
+      style={{ width: size, height: size, backgroundColor: label ? LABEL_TINT[label] : "#D6D3CC" }}
       className="caps flex shrink-0 items-center justify-center rounded-full text-row text-black"
     >
       {letter}
@@ -45,7 +45,7 @@ export const MerchantRow = forwardRef<HTMLButtonElement, Props>(function Merchan
       initial={{ opacity: 0, y: 10 }}
       animate={
         pulse
-          ? { opacity: 1, y: 0, backgroundColor: ["#FFFFFF", "#E3ECFA", "#FFFFFF", "#E3ECFA", "#FFFFFF"] }
+          ? { opacity: 1, y: 0, backgroundColor: ["#FFFFFF", "#E6EAFA", "#FFFFFF", "#E6EAFA", "#FFFFFF"] }
           : { opacity: 1, y: 0, backgroundColor: "#FFFFFF" }
       }
       exit={{ opacity: 0, scale: 0.98 }}

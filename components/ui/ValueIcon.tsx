@@ -3,12 +3,12 @@ import { Plus, Sparkle, VALUE_ICONS } from "./icons";
 
 /** Each value gets its own tint + stroke color so the lists feel alive. */
 export const VALUE_TONES: Record<string, { bg: string; fg: string }> = {
-  climate: { bg: "#E0F0FA", fg: "#3199DD" },
-  labor: { bg: "#FAEFD9", fg: "#B77D1C" },
-  political: { bg: "#E3ECFA", fg: "#3171DD" },
+  climate: { bg: "#E4EDFB", fg: "#2D6FD6" },
+  labor: { bg: "#FBF1CC", fg: "#9A7400" },
+  political: { bg: "#E6EAFA", fg: "#1D3BC4" },
   privacy: { bg: "#FBE5DC", fg: "#E05A2B" },
-  animal: { bg: "#FAEFD9", fg: "#B77D1C" },
-  local: { bg: "#E3ECFA", fg: "#3171DD" },
+  animal: { bg: "#FBF1CC", fg: "#9A7400" },
+  local: { bg: "#E6EAFA", fg: "#1D3BC4" },
 };
 const CUSTOM_TONE = { bg: "#FBE5DC", fg: "#E05A2B" };
 

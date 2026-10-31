@@ -1,18 +1,18 @@
 import type { GenericSummary, Label } from "@/lib/types";
 
 const COLORS: Record<Label, string> = {
-  Aligned: "#3171DD",
-  Mixed: "#D4962A",
+  Aligned: "#1D3BC4",
+  Mixed: "#F2C12E",
   Conflicts: "#E05A2B",
-  Unknown: "#7A7468",
+  Unknown: "#75726B",
 };
 
 /** 10px shape. Colors live only in the shape, never in text. */
 export const LABEL_TINT: Record<Label, string> = {
-  Aligned: "#E3ECFA",
-  Mixed: "#FAEFD9",
+  Aligned: "#E6EAFA",
+  Mixed: "#FBF1CC",
   Conflicts: "#FBE5DC",
-  Unknown: "#F1ECE2",
+  Unknown: "#EDEBE7",
 };
 
 export function StatusShape({ label, size = 10, onDark = false }: { label: Label; size?: number; onDark?: boolean }) {
@@ -46,8 +46,8 @@ export function StatusMarker({ label }: { label: Label }) {
 export function StatusPill({ label, generic, white = false }: { label?: Label; generic?: GenericSummary; white?: boolean }) {
   return (
     <span
-      className="inline-flex h-8 shrink-0 items-center gap-2 rounded-full px-3.5"
-      style={{ backgroundColor: white ? "#FFFFFF" : label ? LABEL_TINT[label] : "#F1ECE2" }}
+      className="inline-flex h-8 shrink-0 items-center gap-2 rounded-pill px-3.5"
+      style={{ backgroundColor: white ? "#FFFFFF" : label ? LABEL_TINT[label] : "#EDEBE7" }}
     >
       {label && <StatusShape label={label} />}
       <span className="font-serif text-status text-ink-2">{label ?? generic}</span>

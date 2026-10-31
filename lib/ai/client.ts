@@ -7,6 +7,11 @@ import { hasDifferentParent, parentName } from "@/data/merchants";
 import type { ExplainInput, ParseResponse } from "./schemas";
 import { FAILED, UNKNOWN_EXPLANATION } from "./scripted";
 import type { AIMode } from "@/lib/store";
+import type { BrowseIntent } from "./browse";
+import type { PlanNarration } from "./plan";
+import type { Research } from "./research";
+import type { TradeoffNarration } from "./tradeoff";
+import type { PlanOption, Scenario } from "@/lib/engine";
 
 export const MIN_PROCESSING_MS = 900;
 
@@ -104,4 +109,41 @@ export function getExplanation(m: Merchant, result: LabelResult, profile: Profil
 
 export function getCachedExplanation(m: Merchant, profile: Profile, mode: AIMode) {
   return cache.get(explainKey(m.id, profile, mode)) ?? null;
+}
+
+// ---------------------------------------------------------------- research + tradeoff
+
+const researchCache = new Map<string, Research>();
+
+/** Grounded evidence trail for one merchant. Cached per merchant + profile. */
+export async function getResearch(m: Merchant, result: LabelResult, profile: Profile, mode: AIMode): Promise<Research> {
+  const key = explainKey(m.id, profile, mode);
+  const hit = researchCache.get(key);
+  if (hit) return hit;
+  const input = buildExplainInput(m, result, profile, mode);
+  const { templateResearch } = await import("./research");
+  const out = await atLeast(postJson<Research>("/api/research", input, 12000).catch(() => templateResearch(input)));
+  researchCache.set(key, out);
+  return out;
+}
+
+export type TradeoffResult = TradeoffNarration & { scenarios: Scenario[] };
+
+export async function getTradeoff(m: Merchant, monthlySpend: number, profile: Profile, mode: AIMode): Promise<TradeoffResult | null> {
+  return atLeast(
+    postJson<TradeoffResult>("/api/tradeoff", { merchantId: m.id, monthlySpend, mode, profile }, 12000).catch(() => null),
+  );
+}
+
+// ---------------------------------------------------------------- plan + browse
+
+
+export type PlanResult = PlanNarration & { pctNow: number | null; options: PlanOption[] };
+
+export async function getPlan(profile: Profile, kept: string[], mode: AIMode): Promise<PlanResult | null> {
+  return atLeast(postJson<PlanResult>("/api/plan", { profile, kept, mode }, 12000).catch(() => null));
+}
+
+export async function getBrowseIntent(query: string, mode: AIMode): Promise<BrowseIntent | null> {
+  return atLeast(postJson<BrowseIntent>("/api/browse", { query, mode }, 10000).catch(() => null));
 }

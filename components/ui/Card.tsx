@@ -88,7 +88,7 @@ export function CardHeader({
 }
 
 export function NewPill() {
-  return <span className="caps rounded-full bg-royal px-2 py-0.5 text-micro text-white">New</span>;
+  return <span className="caps rounded-pill bg-royal px-2 py-0.5 text-micro text-white">New</span>;
 }
 
 /** Arrow in a tinted circle. tone: good (royal), bad (coral), or onDark for the royal card. */

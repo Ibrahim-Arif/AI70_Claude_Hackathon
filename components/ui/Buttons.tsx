@@ -7,7 +7,7 @@ import { ChevronLeft } from "./icons";
 type BtnProps = HTMLMotionProps<"button"> & { variant?: "royal" | "inverted" };
 
 const pill =
-  "caps h-[60px] w-full rounded-full text-btn flex items-center justify-center gap-2 select-none disabled:cursor-not-allowed";
+  "caps h-[60px] w-full rounded-pill text-btn flex items-center justify-center gap-2 select-none disabled:cursor-not-allowed";
 
 export function PrimaryButton({ variant = "royal", className = "", disabled, ...rest }: BtnProps) {
   const colors =

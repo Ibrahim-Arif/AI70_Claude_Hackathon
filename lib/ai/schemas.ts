@@ -14,6 +14,7 @@ export const TAGS = [
   "streaming",
   "online_retail",
   "secondhand",
+  "fast_fashion",
 ] as const;
 export const PARENT_IDS = parents.map((p) => p.id) as [string, ...string[]];
 export const BASES = [

@@ -3,19 +3,22 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CreditCard, HomeIcon, PieChart, Search } from "./icons";
 
 const TABS = [
-  { href: "/home", label: "Home", match: ["/home", "/report"] },
-  { href: "/spending", label: "Spending", match: ["/spending"] },
-  { href: "/you", label: "Values", match: ["/you"] },
+  { href: "/home", label: "Dashboard", match: ["/home", "/report"], Icon: HomeIcon },
+  { href: "/transactions", label: "Transactions", match: ["/transactions"], Icon: CreditCard },
+  { href: "/spending", label: "Spending", match: ["/spending"], Icon: Bars },
+  { href: "/budget", label: "Budget", match: ["/budget"], Icon: PieChart },
+  { href: "/browse", label: "Browse", match: ["/browse"], Icon: Search },
 ];
 
-function TabIcon({ i, active }: { i: number; active: boolean }) {
-  const c = active ? "#3171DD" : "#4A453D";
-  const common = { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: c, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
-  if (i === 0) return <svg {...common}><path d="M4 11l8-6 8 6v9H4z" /><path d="M10 20v-5h4v5" /></svg>;
-  if (i === 1) return <svg {...common}><path d="M5 19V11M10 19V6M15 19v-9M20 19v-5" /></svg>;
-  return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M14.8 9.2l-1.6 4-4 1.6 1.6-4z" /></svg>;
+function Bars({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
+      <path d="M5 19V11M10 19V6M15 19v-9M20 19v-5" />
+    </svg>
+  );
 }
 
 export function TabBar() {
@@ -27,7 +30,7 @@ export function TabBar() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="flex h-[var(--tabbar-h)] items-stretch">
-        {TABS.map((t, i) => {
+        {TABS.map((t) => {
           const active = t.match.some((m) => path.startsWith(m));
           return (
             <li key={t.href} className="flex-1">
@@ -36,19 +39,19 @@ export function TabBar() {
                   whileTap={{ scale: 0.94 }}
                   className="flex h-full flex-col items-center justify-center gap-0.5"
                 >
-                  <span className="relative flex h-8 w-14 items-center justify-center">
+                  <span className="relative flex h-8 w-12 items-center justify-center">
                     {active && (
                       <motion.span
                         layoutId="tab-pill"
-                        className="absolute inset-0 rounded-full bg-royal-tint"
+                        className="absolute inset-0 rounded-pill bg-royal-tint"
                         transition={{ type: "spring", stiffness: 400, damping: 34 }}
                       />
                     )}
-                    <span className="relative">
-                      <TabIcon i={i} active={active} />
+                    <span className={`relative ${active ? "text-royal" : "text-ink-2"}`}>
+                      <t.Icon size={24} strokeWidth={1.9} />
                     </span>
                   </span>
-                  <span className={`caps text-tab ${active ? "text-royal" : "text-ink-2"}`}>{t.label}</span>
+                  <span className={`caps whitespace-nowrap text-[9px] tracking-[0.01em] ${active ? "text-royal" : "text-ink-2"}`}>{t.label}</span>
                 </motion.span>
               </Link>
             </li>

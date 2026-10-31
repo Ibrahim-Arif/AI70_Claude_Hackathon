@@ -103,6 +103,44 @@ export function scriptedParse(text: string, history: { q: string; a: string }[])
     };
   }
 
+  // Contested topics: Tally takes no side. Ask what the person wants to look at, map only
+  // what the data supports, and save the rest honestly as not tracked yet.
+  const topic = /israel|palestin|gaza/.test(t)
+    ? { label: "Israel and Palestine", opts: ["Company political donations and lobbying", "Business operations in the region", "Something else"] }
+    : /christian|faith|religio|church|islam|muslim|jewish|judaism|hindu|buddhis/.test(t)
+      ? { label: "Faith and religion", opts: ["Company political donations on faith-related issues", "Support for faith-based community businesses", "Something else"] }
+      : null;
+  if (topic) {
+    if (history.length === 0) {
+      return {
+        status: "clarify",
+        question: "What would you like Tally to look at? We don't take a side.",
+        options: topic.opts,
+        progress: { step: 1, total: 1 },
+      };
+    }
+    if (/political/i.test(history[0].a)) {
+      return {
+        status: "result",
+        preference: {
+          id: `custom-${topic.label.toLowerCase().replace(/[^a-z]+/g, "-")}`,
+          label: "Political spending",
+          sourceText: text,
+          type: "rating",
+          rule: { kind: "rating", issue: "political" },
+          clarifications: history,
+        },
+        summary: "We'll use company ratings on political spending. They don't tell you which side a donation favors.",
+        basis: "Based on company ratings",
+      };
+    }
+    return {
+      status: "unsupported",
+      label: topic.label,
+      message: "We can't track this yet. We've saved it and will tell you when we have reliable data.",
+    };
+  }
+
   if (/parental leave/.test(t)) {
     return {
       status: "unsupported",

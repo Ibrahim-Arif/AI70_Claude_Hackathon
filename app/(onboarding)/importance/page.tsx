@@ -13,7 +13,7 @@ export default function ImportancePage() {
       <h1 className="head mt-3 text-h1 text-black">
         How much does each <span className="text-royal">matter</span>?
       </h1>
-      <p className="mb-8 mt-3 font-serif text-body text-ink-2">Slide to set how strict we should be.</p>
+      <p className="mb-8 mt-3 font-serif text-body text-ink-2">Slide anywhere to set how strict we should be. The labels are landmarks, not limits.</p>
       <ImportanceBlocks />
     </Screen>
   );

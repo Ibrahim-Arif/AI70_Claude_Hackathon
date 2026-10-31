@@ -3,50 +3,34 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ImportanceSlider } from "./ui/ImportanceSlider";
-import { SegmentedControl } from "./ui/SegmentedControl";
 import { ValueIcon } from "./ui/ValueIcon";
+import { farScoreFor, levelOf, weightOf } from "@/lib/engine";
 import { useApp, useProfile } from "@/lib/store";
-import type { Importance, PriceBudget } from "@/lib/types";
 import { isPreferRule } from "@/lib/values";
 
-const CAPTIONS: Record<Importance, string> = {
-  nice: "We'll mention it, but won't flag anything.",
-  important: "We'll mark companies that fall short as Mixed, and ones far below as Conflicts.",
-  dealbreaker: "We'll flag any company that falls short as a Conflict.",
-};
-
-const THREE = [
-  { value: "nice" as const, label: "Nice" },
-  { value: "important" as const, label: "Important" },
-  { value: "dealbreaker" as const, label: "Dealbreaker" },
-];
-const TWO = [
-  { value: "nice" as const, label: "Nice" },
-  { value: "important" as const, label: "Important" },
-];
-const BUDGET = [
-  { value: 0 as const, label: "0%" },
-  { value: 5 as const, label: "+5%" },
-  { value: 10 as const, label: "+10%" },
-  { value: 20 as const, label: "+20%" },
-];
+function caption(weight: number, prefer: boolean): string {
+  const level = levelOf(weight);
+  if (prefer) {
+    return level === "nice"
+      ? "We'll quietly note local places you already support."
+      : "We'll point out local places you already support.";
+  }
+  if (level === "nice") return "We'll mention it, but won't flag anything.";
+  if (level === "dealbreaker") return "We'll flag any company that falls short as a Conflict.";
+  return `We'll mark companies that fall short as Mixed, and ones that score under ${farScoreFor(weight)} out of 100 as Conflicts.`;
+}
 
 export function ImportanceBlocks({
-  onImportance,
-  onBudget,
+  onWeight,
   onRemove,
 }: {
-  onImportance?: (id: string, imp: Importance) => void;
-  onBudget?: (pct: PriceBudget) => void;
+  onWeight?: (id: string, weight: number) => void;
   onRemove?: (id: string) => void;
 }) {
   const profile = useProfile();
-  const setImportance = useApp((s) => s.setImportance);
-  const set = useApp((s) => s.set);
-  const budget = useApp((s) => s.maxPriceIncreasePct);
-  const changeImp = onImportance ?? setImportance;
-  const changeBudget = onBudget ?? ((pct: PriceBudget) => set({ maxPriceIncreasePct: pct }));
-  const [preview, setPreview] = useState<{ id: string; v: Importance } | null>(null);
+  const setWeight = useApp((s) => s.setWeight);
+  const change = onWeight ?? setWeight;
+  const [preview, setPreview] = useState<{ id: string; v: number } | null>(null);
 
   return (
     <div className="flex flex-col">
@@ -54,14 +38,8 @@ export function ImportanceBlocks({
         {profile.preferences.map((p) => {
           const prefer = isPreferRule(p);
           const unsupported = p.type === "unsupported";
-          const level = preview?.id === p.id ? preview.v : p.importance;
-          const caption = unsupported
-            ? "Not tracked yet. We'll tell you when we have reliable data."
-            : prefer
-              ? level === "nice"
-                ? "We'll quietly note local places you already support."
-                : "We'll point out local places you already support."
-              : CAPTIONS[level];
+          const weight = preview?.id === p.id ? preview.v : weightOf(p);
+          const text = unsupported ? "Not tracked yet. We'll tell you when we have reliable data." : caption(weight, prefer);
           return (
             <motion.section
               key={p.id}
@@ -89,23 +67,22 @@ export function ImportanceBlocks({
               {!unsupported && (
                 <ImportanceSlider
                   ariaLabel={`How much ${p.label} matters`}
-                  options={prefer ? TWO : THREE}
-                  value={prefer && p.importance === "dealbreaker" ? "important" : p.importance}
-                  onChange={(v) => changeImp(p.id, v)}
-                  onPreview={(v) => setPreview(v ? { id: p.id, v } : null)}
+                  value={weightOf(p)}
+                  onChange={(v) => change(p.id, v)}
+                  onPreview={(v) => setPreview(v === null ? null : { id: p.id, v })}
                 />
               )}
               <div className="relative mt-2 min-h-[42px]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.p
-                    key={caption}
+                    key={text}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    transition={{ duration: 0.12, ease: "easeOut" }}
                     className="font-serif text-caption text-ink-2"
                   >
-                    {caption}
+                    {text}
                   </motion.p>
                 </AnimatePresence>
               </div>
@@ -113,11 +90,6 @@ export function ImportanceBlocks({
           );
         })}
       </AnimatePresence>
-      <motion.div layout="position" className="border-t border-hairline pt-8">
-        <h2 className="caps mb-3 text-label text-black">I&apos;d pay up to</h2>
-        <SegmentedControl ariaLabel="Price increase you'd accept" options={BUDGET} value={budget} onChange={changeBudget} />
-        <p className="mt-3 font-serif text-caption text-ink-2">More than you spend now, when we suggest alternatives.</p>
-      </motion.div>
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AISummary } from "../ui/AISummary";
+import { EvidenceTrail } from "../ui/EvidenceTrail";
+import { TradeoffCard } from "../ui/TradeoffCard";
+import { AlternativeCompare, ReliabilityPanel, SectionHead, WhyPanel } from "../ui/CompanyPanels";
 import { LinkButton, SecondaryButton } from "../ui/Buttons";
 import { money2 } from "../ui/CountUp";
 import { Check, ExternalLink } from "../ui/icons";
@@ -11,10 +14,11 @@ import { Monogram } from "../ui/MerchantRow";
 import { LABEL_TINT, StatusMarker, StatusPill } from "../ui/Status";
 import { SHEET_SPRING } from "../ui/BottomSheet";
 import { alternatives } from "@/data/alternatives";
+import { transactions } from "@/data/transactions";
 import { hasDifferentParent, merchantById, parentName } from "@/data/merchants";
 import { getCachedExplanation, getExplanation, MIN_PROCESSING_MS, wait } from "@/lib/ai/client";
 import { UNKNOWN_EXPLANATION } from "@/lib/ai/scripted";
-import { alternativesFor, formatRatingDate, genericSummary, isStale, profileHash, reasonText } from "@/lib/engine";
+import { alternativesFor, formatRatingDate, genericSummary, isStale, profileHash } from "@/lib/engine";
 import { useApp, useUI } from "@/lib/store";
 import type { Issue, Rating } from "@/lib/types";
 import { useDerived } from "@/lib/useDerived";
@@ -35,7 +39,7 @@ function EvidenceRow({ r }: { r: Rating }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="caps text-label text-black">{ISSUE_LABEL[r.issue]}</span>
-          {stale && <span className="caps rounded-full bg-fill px-2 py-0.5 text-micro text-ink-2">Stale</span>}
+          {stale && <span className="caps rounded-pill bg-fill px-2 py-0.5 text-micro text-ink-2">Stale</span>}
         </div>
         <p className="mt-1 font-serif text-caption text-ink-2">
           {r.source} · {formatRatingDate(r.date)} · {r.scope === "parent" ? "Parent company" : "Merchant"}
@@ -46,7 +50,7 @@ function EvidenceRow({ r }: { r: Rating }) {
         <span className="h-1.5 w-full overflow-hidden rounded-full bg-fill" aria-hidden>
           <motion.span
             className="block h-full rounded-full"
-            style={{ backgroundColor: r.score < 30 ? "#E05A2B" : r.score < 50 ? "#D4962A" : "#3171DD" }}
+            style={{ backgroundColor: r.score < 30 ? "#E05A2B" : r.score < 50 ? "#F2C12E" : "#1D3BC4" }}
             initial={{ width: 0 }}
             animate={{ width: `${r.score}%` }}
             transition={{ type: "spring", stiffness: 160, damping: 26, delay: 0.15 }}
@@ -95,9 +99,13 @@ export function MerchantSheet({ id }: { id: string }) {
   const router = useRouter();
   const d = useDerived();
   const keep = useApp((s) => s.keep);
+  const markEssential = useApp((s) => s.markEssential);
+  const essential = useApp((s) => s.essential);
   const kept = useApp((s) => s.kept);
   const { closeSheet, openSheet, showToast } = useUI();
   const [showAlts, setShowAlts] = useState(false);
+  const [selAlt, setSelAlt] = useState<string | null>(null);
+  const [explore, setExplore] = useState(false);
 
   const m = merchantById[id];
   const result = d.results[id];
@@ -106,11 +114,13 @@ export function MerchantSheet({ id }: { id: string }) {
   const unknown = !generic && result.label === "Unknown";
   const unrated = m.ratings.length === 0;
   const flagged = !generic && (result.label === "Mixed" || result.label === "Conflicts");
-  const reason = !generic ? reasonText(result) : null;
   const supportsLocal = !generic && result.supports.some(isPreferRule);
   const explanation = useExplanation(id, !generic && !unknown && !unrated);
   const alts = alternativesFor(id, alternatives, d.profile);
   const isKept = kept.includes(id);
+  const isEssential = essential.includes(id);
+  const descriptor = transactions.find((t) => t.merchantId === id)?.rawName;
+  const hasParentScope = m.ratings.some((r) => r.scope === "parent");
 
   const onKeep = () => {
     keep(id);
@@ -121,11 +131,17 @@ export function MerchantSheet({ id }: { id: string }) {
     );
   };
 
+  const onEssential = () => {
+    markEssential(id);
+    closeSheet();
+    showToast(`Got it. ${m.name} is marked as essential.`, { label: "View", href: "/spending" });
+  };
+
   return (
     <div className="pt-1">
       <header
         className="-mx-6 -mt-1 flex items-center gap-3.5 px-6 py-4"
-        style={{ backgroundColor: generic ? "#F1ECE2" : LABEL_TINT[result.label] }}
+        style={{ backgroundColor: generic ? "#EDEBE7" : LABEL_TINT[result.label] }}
       >
         <span className="rounded-full bg-white p-1">
           <Monogram name={m.name} size={48} label={generic ? undefined : result.label} />
@@ -137,19 +153,36 @@ export function MerchantSheet({ id }: { id: string }) {
         {generic ? <StatusPill white generic={genericSummary(m)} /> : <StatusPill white label={result.label} />}
       </header>
 
-      <p className="mt-5 font-serif text-body text-black">You spent {money2(spend)} this month.</p>
-      {reason && flagged && <p className="mt-2 font-serif text-body text-ink-2">{reason}</p>}
+      <SectionHead n={1} title="The company" />
+      <p className="mt-3 font-serif text-body text-black">You spent {money2(spend)} this month.</p>
+      <div className="mt-3 rounded-row bg-fill px-4 py-3">
+        <p className="caps text-micro text-ink-2">Company behind this purchase</p>
+        <p className="mt-1 font-serif text-caption text-black">
+          {m.name}
+          {hasDifferentParent(m) ? `, owned by ${parentName(m)}` : ""}
+          {descriptor ? <span className="text-ink-2">. Matched from “{descriptor}” on your statement.</span> : null}
+        </p>
+        {hasParentScope && (
+          <p className="mt-1 font-serif text-micro text-ink-2">
+            Some evidence below describes the parent company, not necessarily this store.
+          </p>
+        )}
+      </div>
       {supportsLocal && (
         <p className="mt-2 flex items-center gap-1.5 font-serif text-body text-ink-2">
           <Check size={18} strokeWidth={2.4} className="text-royal" /> Supports local, a value you chose.
         </p>
       )}
-      {isKept && <p className="mt-2 font-serif text-caption text-ink-2">You chose to keep this one. It won&apos;t be flagged.</p>}
+      {isKept && (
+        <p className="mt-2 font-serif text-caption text-ink-2">
+          {isEssential ? "You marked this as essential." : "You chose to keep this one."} It won&apos;t be flagged.
+        </p>
+      )}
 
       {unrated || unknown ? (
         <>
-          {unrated && <p className="mt-2 font-serif text-body text-ink-2">No reliable rating yet.</p>}
-          {!unrated && reason && <p className="mt-2 font-serif text-body text-ink-2">{reason}</p>}
+          <SectionHead n={2} title="What we found" />
+          {unrated && <p className="mt-3 font-serif text-body text-ink-2">No reliable rating yet.</p>}
           {!unrated && (
             <ul className="mt-4">
               {m.ratings.map((r) => (
@@ -163,7 +196,7 @@ export function MerchantSheet({ id }: { id: string }) {
         </>
       ) : (
         <>
-          <p className="caps mt-6 text-label text-ink-2">Evidence</p>
+          <SectionHead n={2} title="What we found" />
           <ul className="mt-1">
             {m.ratings.map((r) => (
               <EvidenceRow key={r.issue} r={r} />
@@ -182,6 +215,9 @@ export function MerchantSheet({ id }: { id: string }) {
           {!generic && (
             <div className="mt-5">
               <AISummary text={explanation} loading={!explanation} />
+              <div className="mt-3">
+                <EvidenceTrail merchantId={id} result={result} profile={d.profile} />
+              </div>
             </div>
           )}
           {generic && (
@@ -190,7 +226,22 @@ export function MerchantSheet({ id }: { id: string }) {
         </>
       )}
 
-      <div className="mt-6 flex flex-col gap-3">
+      {!generic && (
+        <>
+          <SectionHead n={3} title="How reliable is it?" />
+          <ReliabilityPanel m={m} />
+          <SectionHead n={4} title="Why you might care" />
+          <WhyPanel m={m} profile={d.profile} result={result} />
+        </>
+      )}
+
+      {!generic && <SectionHead n={5} title="Your options" />}
+      <div className="mt-4 flex flex-col gap-3">
+        {flagged && !isKept && (
+          <p className="font-serif text-caption text-ink-2">
+            Tally spotted a possible mismatch with what you told us. It can&apos;t say whether this purchase was right. That&apos;s your call.
+          </p>
+        )}
         {flagged && (
           <SecondaryButton onClick={() => setShowAlts((v) => !v)} aria-expanded={showAlts}>
             Find alternatives
@@ -198,8 +249,12 @@ export function MerchantSheet({ id }: { id: string }) {
         )}
         {(flagged || unknown || unrated) && !isKept && (
           <SecondaryButton onClick={onKeep}>
-            Keep it
+            {flagged ? "Keep it, I've decided" : "Keep it"}
           </SecondaryButton>
+        )}
+        {flagged && !isKept && <SecondaryButton onClick={onEssential}>Mark as essential</SecondaryButton>}
+        {flagged && (
+          <SecondaryButton onClick={() => openSheet({ type: "goal", merchantId: id })}>Set a goal</SecondaryButton>
         )}
       </div>
 
@@ -218,18 +273,28 @@ export function MerchantSheet({ id }: { id: string }) {
               {alts.fits.length > 0 ? (
                 <ul className="mt-3 flex flex-col gap-3">
                   {alts.fits.map((a) => (
-                    <li key={a.name} className="flex min-h-[76px] items-center gap-3.5 rounded-row bg-royal-tint px-4 py-3">
-                      <span className="rounded-full bg-white p-0.5">
-                        <Monogram name={a.name} label="Aligned" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="caps truncate text-label text-black">{a.name}</p>
-                        <p className="font-serif text-caption text-ink-2">
-                          {a.availability[0].toUpperCase() + a.availability.slice(1)} ·{" "}
-                          {a.priceDeltaPct > 0 ? `+${a.priceDeltaPct}% price` : `${a.priceDeltaPct}% price`}
-                        </p>
-                      </div>
-                      <StatusMarker label="Aligned" />
+                    <li key={a.name}>
+                      <button
+                        type="button"
+                        onClick={() => setSelAlt(selAlt === a.name ? null : a.name)}
+                        aria-expanded={selAlt === a.name}
+                        className={`flex min-h-[76px] w-full items-center gap-3.5 rounded-row bg-royal-tint px-4 py-3 text-left ${selAlt === a.name ? "ring-2 ring-royal" : ""}`}
+                      >
+                        <span className="rounded-full bg-white p-0.5">
+                          <Monogram name={a.name} label="Aligned" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="caps truncate text-label text-black">{a.name}</p>
+                          <p className="font-serif text-caption text-ink-2">
+                            {a.availability[0].toUpperCase() + a.availability.slice(1)} ·{" "}
+                            {a.priceDeltaPct > 0 ? `+${a.priceDeltaPct}% price` : `${a.priceDeltaPct}% price`}
+                          </p>
+                        </div>
+                        <StatusMarker label="Aligned" />
+                      </button>
+                      {selAlt === a.name && (
+                        <AlternativeCompare m={m} alt={a} spend={spend} profile={d.profile} onKeep={onKeep} onExplore={() => setExplore(true)} />
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -241,13 +306,20 @@ export function MerchantSheet({ id }: { id: string }) {
                   {alts.overBudgetCount} more {alts.overBudgetCount === 1 ? "option is" : "options are"} over your budget.
                 </p>
               )}
+              <div className="mt-4">
+                {explore ? (
+                  <TradeoffCard key="auto" autoRun merchantId={id} monthlySpend={spend} profile={d.profile} />
+                ) : (
+                  <TradeoffCard key="idle" merchantId={id} monthlySpend={spend} profile={d.profile} />
+                )}
+              </div>
               <p className="mt-2 font-serif text-caption text-ink-2">Alternatives are fictional and illustrative.</p>
             </div>
           </motion.section>
         )}
       </AnimatePresence>
 
-      {!generic && !unknown && !unrated && (
+      {!generic && !unknown && !unrated && !flagged && (
         <div className="mt-4 flex justify-center">
           <LinkButton onClick={() => openSheet({ type: "goal", merchantId: id })}>Set a goal</LinkButton>
         </div>

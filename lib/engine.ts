@@ -6,6 +6,7 @@ import type {
   Alternative,
   Evaluation,
   GenericSummary,
+  Importance,
   Label,
   Merchant,
   Preference,
@@ -43,12 +44,32 @@ export function evaluate(merchant: Merchant, pref: Preference): Evaluation {
   }
 }
 
-/** True when a rating-rule fail is far below the bar (score < FAR_SCORE). */
+/** Reference marks on the 0 to 100 importance scale. They are landmarks, not ranges. */
+export const WEIGHT_REF = { nice: 0, important: 50, dealbreaker: 100 } as const;
+
+export function weightOf(pref: Pick<Preference, "importance" | "weight">): number {
+  return pref.weight ?? WEIGHT_REF[pref.importance];
+}
+
+/** The rung of the label ladder a weight lands on. Only the edges change the ladder; the middle is continuous. */
+export function levelOf(weight: number): Importance {
+  return weight < 30 ? "nice" : weight >= 90 ? "dealbreaker" : "important";
+}
+
+/**
+ * Below this score a failing company counts as Conflicts. It slides with the weight:
+ * 30 at the Important mark, rising to 50 (everything that falls short) at Dealbreaker.
+ */
+export function farScoreFor(weight: number): number {
+  return Math.round(Math.min(50, Math.max(20, FAR_SCORE + (weight - 50) * 0.4)));
+}
+
+/** True when a rating-rule fail is far below the bar for this preference's weight. */
 export function isFarBelow(merchant: Merchant, pref: Preference): boolean {
   const rule = pref.rule;
   if (rule?.kind !== "rating") return false;
   const r = merchant.ratings.find((x) => x.issue === rule.issue);
-  return !!r && r.score < FAR_SCORE;
+  return !!r && r.score < farScoreFor(weightOf(pref));
 }
 
 // ---------------------------------------------------------------- label
@@ -293,7 +314,7 @@ export function sameParentMerchants(merchant: Merchant, all: Merchant[]): Mercha
 export function profileHash(profile: Profile): string {
   const s = JSON.stringify([
     profile.maxPriceIncreasePct,
-    profile.preferences.map((p) => [p.id, p.rule, p.importance]),
+    profile.preferences.map((p) => [p.id, p.rule, p.importance, p.weight ?? null]),
   ]);
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -302,4 +323,89 @@ export function profileHash(profile: Profile): string {
 
 export function round2(n: number) {
   return Math.round(n * 100) / 100;
+}
+
+// ---------------------------------------------------------------- tradeoffs
+
+export type Scenario = {
+  alternative: Alternative;
+  /** Label the alternative would get under the person's values. */
+  label: Label;
+  /** Estimated change in monthly cost if all of this merchant's spend moved. */
+  monthlyCostDelta: number;
+  withinBudget: boolean;
+  /** Labels of the person's values the alternative meets and the current merchant does not. */
+  improvesOn: string[];
+};
+
+/** All alternatives with costs and fit. Ranks nothing and recommends nothing. */
+export function exploreTradeoff(
+  merchant: Merchant,
+  monthlySpend: number,
+  all: Alternative[],
+  profile: Profile,
+): Scenario[] {
+  return all
+    .filter((a) => a.forMerchantId === merchant.id)
+    .map((alternative) => {
+      const alt = alternativeAsMerchant(alternative);
+      const improvesOn = profile.preferences
+        .filter((p) => evaluate(merchant, p) === "fail" && evaluate(alt, p) === "pass")
+        .map((p) => p.label);
+      return {
+        alternative,
+        label: label(alt, profile).label,
+        monthlyCostDelta: round2((monthlySpend * alternative.priceDeltaPct) / 100),
+        withinBudget: alternative.priceDeltaPct <= profile.maxPriceIncreasePct,
+        improvesOn,
+      };
+    });
+}
+
+// ---------------------------------------------------------------- karma + alignment plan
+
+/** One credit per $2 spent at companies that match the person's own values. It never rewards spending more. */
+export function karmaCredits(summary: Pick<Summary, "aligned">): number {
+  return Math.round(summary.aligned / 2);
+}
+
+export type PlanOption = {
+  merchantId: string;
+  alternative: Alternative;
+  /** This month's spend that would move. */
+  spend: number;
+  monthlyCostDelta: number;
+  pctAfter: number | null;
+};
+
+/**
+ * Optional moves that would raise alignment, using only alternatives that fit the person's
+ * values and budget. Ordered by spend, not by "best". Recommends nothing.
+ */
+export function alignmentOptions(
+  txs: Transaction[],
+  merchantsById: Record<string, Merchant>,
+  all: Alternative[],
+  profile: Profile,
+  kept: string[] = [],
+  limit = 4,
+): { pctNow: number | null; options: PlanOption[] } {
+  const summary = summarize(txs, merchantsById, profile);
+  const spend = spendByMerchant(txs);
+  const options: PlanOption[] = [];
+  for (const id of flags(txs, merchantsById, profile, kept)) {
+    const { fits } = alternativesFor(id, all, profile);
+    for (const alternative of fits) {
+      const s = spend[id] ?? 0;
+      options.push({
+        merchantId: id,
+        alternative,
+        spend: s,
+        monthlyCostDelta: round2((s * alternative.priceDeltaPct) / 100),
+        pctAfter: summary.labeled > 0 ? Math.round(((summary.aligned + s) / summary.labeled) * 100) : null,
+      });
+    }
+  }
+  options.sort((a, b) => b.spend - a.spend);
+  return { pctNow: summary.alignmentPct, options: options.slice(0, limit) };
 }

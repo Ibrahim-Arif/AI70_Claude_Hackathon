@@ -14,7 +14,8 @@ export type DemoJump =
   | "amazon"
   | "reportNov"
   | "reportOct"
-  | "loading";
+  | "loading"
+  | "sam";
 
 export const DEMO_JUMPS: { id: DemoJump; label: string; key?: string }[] = [
   { id: "start", label: "Start", key: "1" },
@@ -26,6 +27,7 @@ export const DEMO_JUMPS: { id: DemoJump; label: string; key?: string }[] = [
   { id: "reportNov", label: "Report November", key: "7" },
   { id: "reportOct", label: "Report October", key: "8" },
   { id: "loading", label: "Loading screen", key: "9" },
+  { id: "sam", label: "Same evidence, different values (Sam)", key: "0" },
 ];
 
 export const DEMO_KEYS: Record<string, DemoJump> = Object.fromEntries(
@@ -77,6 +79,12 @@ export function runDemoJump(id: DemoJump, router: Router) {
       return;
     case "amazon":
       ensurePersona();
+      router.push("/spending");
+      setTimeout(() => useUI.getState().openSheet({ type: "merchant", id: "amazon" }), 350);
+      return;
+    case "sam":
+      app.fillSam();
+      useApp.setState({ lastSeen: null, changeBaseline: null });
       router.push("/spending");
       setTimeout(() => useUI.getState().openSheet({ type: "merchant", id: "amazon" }), 350);
       return;

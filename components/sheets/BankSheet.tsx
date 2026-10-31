@@ -9,7 +9,7 @@ import { useUI } from "@/lib/store";
 export function AnimatedCheck({ size = 72 }: { size?: number }) {
   return (
     <motion.svg width={size} height={size} viewBox="0 0 72 72" aria-hidden initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-      <circle cx="36" cy="36" r="36" fill="#3171DD" />
+      <circle cx="36" cy="36" r="36" fill="#1D3BC4" />
       <motion.path
         d="M22 37l10 10 19-21"
         fill="none"

@@ -6,7 +6,7 @@ import { AddSheet } from "./sheets/AddSheet";
 import { BankSheet } from "./sheets/BankSheet";
 import { GoalSheet } from "./sheets/GoalSheet";
 import { MerchantSheet } from "./sheets/MerchantSheet";
-import { DemoPanel, HowCalcSheet, SettingsSheet } from "./sheets/SmallSheets";
+import { DemoPanel, HowCalcSheet, KarmaSheet, NotificationsSheet, SettingsSheet } from "./sheets/SmallSheets";
 import { useUI } from "@/lib/store";
 import { merchantById } from "@/data/merchants";
 
@@ -52,6 +52,16 @@ export function Overlays() {
         key = "howcalc";
         label = "How we calculate";
         content = <HowCalcSheet />;
+        break;
+      case "karma":
+        key = "karma";
+        label = "Karma credits";
+        content = <KarmaSheet />;
+        break;
+      case "notifications":
+        key = "notifications";
+        label = "Notifications";
+        content = <NotificationsSheet />;
         break;
       case "bank":
         key = "bank";

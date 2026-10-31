@@ -7,27 +7,27 @@
 @theme {
   --color-*: initial;
   --color-white: #ffffff;
-  --color-cream: #fffbf3;
-  --color-sky: #3199dd;
-  --color-royal: #3171dd;
+  --color-cream: #F7F6F3;
+  --color-sky: #2D6FD6;
+  --color-royal: #1D3BC4;
   --color-black: #000000;
   --color-ink: #000000;
-  --color-ink-2: #4a453d;
-  --color-ink-3: #7a7468;
-  --color-royal-tint: #e3ecfa;
-  --color-sky-tint: #e0f0fa;
-  --color-fill: #f1ece2;
-  --color-hairline: #e8e1d3;
-  --color-icon-tile: #ddd5c6;
-  --color-aligned: #3171dd;
-  --color-mixed: #d4962a;
+  --color-ink-2: #45433F;
+  --color-ink-3: #75726B;
+  --color-royal-tint: #E6EAFA;
+  --color-sky-tint: #E4EDFB;
+  --color-fill: #EDEBE7;
+  --color-hairline: #E4E2DD;
+  --color-icon-tile: #D6D3CC;
+  --color-aligned: #1D3BC4;
+  --color-mixed: #F2C12E;
   --color-conflicts: #e05a2b;
-  --color-unknown: #7a7468;
+  --color-unknown: #75726B;
   --color-transparent: transparent;
   /* Tints derived from the status colors, for a warmer, more colorful UI */
-  --color-amber-tint: #faefd9;
+  --color-amber-tint: #FBF1CC;
   --color-coral-tint: #fbe5dc;
-  --color-amber-deep: #b77d1c;
+  --color-amber-deep: #9A7400;
 
   --font-display: var(--font-capriola), system-ui, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;
@@ -63,11 +63,12 @@
   --text-summary: 17px;
   --text-summary--line-height: 25px;
 
-  --radius-card: 20px;
-  --radius-row: 16px;
-  --radius-tile: 10px;
-  --radius-sheet: 28px;
-  --radius-toast: 14px;
+  --radius-card: 12px;
+  --radius-pill: 12px;
+  --radius-row: 10px;
+  --radius-tile: 6px;
+  --radius-sheet: 18px;
+  --radius-toast: 8px;
   --radius-frame: 44px;
 
   --tracking-head: -0.02em;
@@ -87,10 +88,10 @@
 }
 
 :root {
-  --cream: #fffbf3;
-  --royal: #3171dd;
-  --sky: #3199dd;
-  --sky-tint: #e0f0fa;
+  --cream: #F7F6F3;
+  --royal: #1D3BC4;
+  --sky: #2D6FD6;
+  --sky-tint: #E4EDFB;
   --tabbar-h: 72px;
   color-scheme: light;
 }
@@ -127,10 +128,10 @@ body {
   font-weight: 400;
 }
 .num {
-  font-family: var(--font-display);
+  font-family: var(--font-num), system-ui, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  font-weight: 400;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -141,7 +142,7 @@ body {
 }
 
 .shimmer-bar {
-  background: linear-gradient(90deg, #ffffff 0%, #e3ecfa 50%, #ffffff 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #E6EAFA 50%, #ffffff 100%);
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 }

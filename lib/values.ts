@@ -6,6 +6,8 @@ export type CatalogEntry = {
   /** caps label on the SelectionRow */
   rowLabel: string;
   icon: "leaf" | "hands" | "columns" | "lock" | "paw" | "store";
+  /** Contested or open-ended topics start a short AI conversation instead of toggling a fixed rule. */
+  topic?: string;
   pref: Omit<Preference, "importance">;
   defaultImportance: Importance;
 };
@@ -57,6 +59,46 @@ export const CATALOG: CatalogEntry[] = [
       rule: { kind: "attribute", tag: "local", polarity: "prefer" },
     },
     defaultImportance: "important",
+  },
+  {
+    id: "fastfashion",
+    rowLabel: "Fast fashion",
+    icon: "store",
+    pref: {
+      id: "fastfashion",
+      label: "Avoid fast fashion",
+      type: "attribute",
+      rule: { kind: "attribute", tag: "fast_fashion", polarity: "avoid" },
+    },
+    defaultImportance: "important",
+  },
+  {
+    id: "avoidamazon",
+    rowLabel: "Avoid Amazon",
+    icon: "store",
+    pref: {
+      id: "avoidamazon",
+      label: "Avoid Amazon",
+      type: "entity",
+      rule: { kind: "entity", parentId: "amazon", polarity: "avoid" },
+    },
+    defaultImportance: "important",
+  },
+  {
+    id: "israelpalestine",
+    rowLabel: "Israel and Palestine",
+    icon: "columns",
+    topic: "Israel and Palestine",
+    pref: { id: "israelpalestine", label: "Israel and Palestine", type: "unsupported" },
+    defaultImportance: "nice",
+  },
+  {
+    id: "faith",
+    rowLabel: "Faith and religion",
+    icon: "hands",
+    topic: "Faith and religion",
+    pref: { id: "faith", label: "Faith and religion", type: "unsupported" },
+    defaultImportance: "nice",
   },
 ];
 

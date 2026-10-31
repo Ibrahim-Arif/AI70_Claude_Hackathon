@@ -189,8 +189,8 @@ describe("predictable conflicts", () => {
     expect(labels).toContain("Aligned");
     expect(labels).toContain("Unknown");
   });
-  it("only Animal welfare is untracked in the catalog", () => {
-    expect(CATALOG.filter((c) => c.pref.type === "unsupported").map((c) => c.id)).toEqual(["animal"]);
+  it("only open-ended topics are untracked in the catalog", () => {
+    expect(CATALOG.filter((c) => c.pref.type === "unsupported").map((c) => c.id)).toEqual(["animal", "israelpalestine", "faith"]);
   });
   it("Blue Bottle is Unknown when Political spending matters (no rating)", () => {
     const c = catalogById.political;
