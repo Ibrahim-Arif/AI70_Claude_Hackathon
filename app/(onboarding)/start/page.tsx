@@ -40,9 +40,12 @@ export default function StartPage() {
         <HalftoneCompass size={230} color="#1D3BC4" accent="#2D6FD6" />
       </motion.div>
       <h1 className="head mt-8 text-h1 text-black">
-        Know where your <span className="text-royal">money</span> goes
+        Your money goes somewhere.
+        <span className="mt-1 block text-royal [-webkit-text-stroke:0.035em_currentColor]">Know where.</span>
       </h1>
-      <p className="mt-3 font-serif text-body text-ink-2">Decide what it means. We do the research. You keep the judgment.</p>
+      <p className="mt-3 font-serif text-body text-ink-2">
+        See the companies behind your purchases, what they stand for, and what your spending supports.
+      </p>
       <form
         className="mt-6"
         onSubmit={(e) => {
@@ -50,19 +53,15 @@ export default function StartPage() {
           go();
         }}
       >
-        <label htmlFor="first-name" className="block font-serif text-body text-ink-2">
-          What should we call you?
-        </label>
-        <span className="caps mt-5 block text-label text-ink-2" aria-hidden>
+        <label htmlFor="first-name" className="caps block text-label text-ink-2">
           First name
-        </span>
+        </label>
         <input
           id="first-name"
           autoComplete="given-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="mt-2 h-14 w-full rounded-row border border-hairline bg-white px-4 font-serif text-body text-black outline-none placeholder:text-ink-3 focus:border-black"
-          placeholder="Maya"
           enterKeyHint="go"
         />
       </form>
