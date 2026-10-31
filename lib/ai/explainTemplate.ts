@@ -11,6 +11,7 @@ const ISSUE_WORD: Record<string, string> = {
   labor: "worker treatment",
   governance: "governance",
   political: "political spending",
+  privacy: "privacy",
 };
 const IMP: Record<string, string> = { nice: "nice to have", important: "important", dealbreaker: "a dealbreaker" };
 
@@ -62,7 +63,9 @@ export function templateExplain(input: ExplainInput): string {
     const r = rule?.kind === "rating" ? ratings.find((x) => x.issue === rule.issue) : undefined;
     if (r) {
       sentences.push(
-        `${merchant.name} is marked ${label} because you marked ${reason.label} as ${IMP[reason.importance]}, and ${cite(r)} scored it ${r.score} out of 100.`,
+        reason.severe
+          ? `${merchant.name} is marked ${label} because it falls far short on ${reason.label}, which you marked as important: ${cite(r)} scored it ${r.score} out of 100.`
+          : `${merchant.name} is marked ${label} because you marked ${reason.label} as ${IMP[reason.importance]}, and ${cite(r)} scored it ${r.score} out of 100.`,
       );
     } else if (rule?.kind === "entity") {
       sentences.push(`${merchant.name} is marked ${label} because it's owned by ${merchant.parentName} and you chose ${reason.label}.`);

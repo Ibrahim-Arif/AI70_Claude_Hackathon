@@ -11,10 +11,12 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { hasDifferentParent, parentName } from "@/data/merchants";
 import { november, september } from "@/data/demo";
 import { useApp, useUI } from "@/lib/store";
+import { StatusShape } from "@/components/ui/Status";
+import type { Label } from "@/lib/types";
 import { useDerived } from "@/lib/useDerived";
 import { isPreferRule } from "@/lib/values";
 
-function Section({ children, title }: { children: ReactNode; title?: string }) {
+function Section({ children, title, shape }: { children: ReactNode; title?: string; shape?: Label }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
@@ -23,7 +25,12 @@ function Section({ children, title }: { children: ReactNode; title?: string }) {
       transition={{ duration: 0.35, ease: "easeOut" }}
       className="mt-8"
     >
-      {title && <h2 className="caps mb-3 text-label text-black">{title}</h2>}
+      {title && (
+        <h2 className="caps mb-3 flex items-center gap-2 text-label text-black">
+          {shape && <StatusShape label={shape} size={12} />}
+          {title}
+        </h2>
+      )}
       {children}
     </motion.section>
   );
@@ -41,28 +48,30 @@ function October() {
   return (
     <>
       <Section>
-        <Card>
-          <CardHeader label="Matches your values" chevron={false} />
+        <Card tone="royal">
+          <CardHeader label="Matches your values" chevron={false} onDark />
           {pct === null ? (
-            <p className="head mt-3 text-h2 text-black">Not enough data yet</p>
+            <p className="head mt-3 text-h2 text-white">Not enough data yet</p>
           ) : (
             <>
-              <p className="num mt-3 text-hero text-black">
+              <p className="num mt-3 text-hero text-white">
                 <CountUp to={pct} format={(n) => `${Math.round(n)}%`} />
               </p>
-              <p className="mt-2 font-serif text-caption text-ink-2">of your rated October spending</p>
+              <p className="mt-2 font-serif text-caption text-white">of your rated October spending</p>
               <Delta
                 direction={pct >= september.alignmentPct ? "up" : "down"}
                 value={`${Math.abs(pct - september.alignmentPct)} pts`}
                 caption="vs. Sept"
+                tone={pct >= september.alignmentPct ? "good" : "bad"}
+                onDark
               />
-              <StackedBar aligned={d.summary.aligned} mixed={d.summary.mixed} conflicts={d.summary.conflicts} />
+              <StackedBar aligned={d.summary.aligned} mixed={d.summary.mixed} conflicts={d.summary.conflicts} onDark />
             </>
           )}
         </Card>
       </Section>
 
-      <Section title="Top flagged">
+      <Section title="Top flagged" shape="Conflicts">
         {flagged.length ? (
           <div className="flex flex-col gap-3">
             {flagged.map(({ merchant: m, spend, result }) => (
@@ -81,7 +90,7 @@ function October() {
         )}
       </Section>
 
-      <Section title="Unknown">
+      <Section title="Unknown" shape="Unknown">
         <p className="-mt-1 mb-3 font-serif text-caption text-ink-2">
           {money0(d.summary.unknown)} went to places without reliable ratings. It isn&apos;t counted as aligned.
         </p>
@@ -103,7 +112,7 @@ function October() {
         {untracked.length ? (
           <ul className="flex flex-col gap-3">
             {untracked.map((p) => (
-              <li key={p.id} className="rounded-row bg-white px-4 py-4">
+              <li key={p.id} className="rounded-row bg-amber-tint px-4 py-4">
                 <p className="caps text-label text-black">{p.label}</p>
                 <p className="mt-1 font-serif text-caption text-ink-2">We&apos;ve saved it and will tell you when we have reliable data.</p>
               </li>
@@ -128,18 +137,19 @@ function November() {
     <>
       <p className="mt-4 font-serif text-caption text-ink-2">Demo preview of next month.</p>
       <Section>
-        <Card>
-          <CardHeader label="Matches your values" chevron={false} />
-          <p className="num mt-3 text-hero text-black">
+        <Card tone="royal">
+          <CardHeader label="Matches your values" chevron={false} onDark />
+          <p className="num mt-3 text-hero text-white">
             <CountUp to={november.alignmentPct} format={(n) => `${Math.round(n)}%`} />
           </p>
-          <p className="mt-2 font-serif text-caption text-ink-2">of your rated November spending</p>
-          <Delta direction="up" value={`${november.deltaVsOct} pts`} caption="vs. Oct" />
+          <p className="mt-2 font-serif text-caption text-white">of your rated November spending</p>
+          <Delta direction="up" value={`${november.deltaVsOct} pts`} caption="vs. Oct" onDark />
         </Card>
       </Section>
 
       <Section title="Your goal">
         <Card
+          tone="sky"
           footer={
             <>
               <span className="caps text-label text-black">Goal: under {money0(target)}</span>
@@ -167,7 +177,7 @@ function November() {
         </Card>
       </Section>
 
-      <Section title="Unknown">
+      <Section title="Unknown" shape="Unknown">
         <Card>
           <p className="num text-cardnum text-black">{money0(november.unratedSpend)}</p>
           <p className="mt-1 font-serif text-caption text-ink-2">at {november.unratedPlaces} places without ratings</p>
@@ -175,7 +185,7 @@ function November() {
       </Section>
 
       <Section title="Not tracked yet">
-        <Card>
+        <Card tone="amber">
           <p className="font-serif text-body text-black">{november.untrackedValues} value not tracked yet.</p>
           <p className="mt-1 font-serif text-caption text-ink-2">We&apos;ll tell you when we have reliable data.</p>
         </Card>

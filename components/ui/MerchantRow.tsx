@@ -4,16 +4,16 @@ import { motion } from "motion/react";
 import { forwardRef } from "react";
 import type { GenericSummary, Label } from "@/lib/types";
 import { Check } from "./icons";
-import { GenericWord, StatusMarker } from "./Status";
+import { GenericWord, LABEL_TINT, StatusMarker } from "./Status";
 import { money2 } from "./CountUp";
 
-export function Monogram({ name, size = 44 }: { name: string; size?: number }) {
+export function Monogram({ name, size = 44, label }: { name: string; size?: number; label?: Label }) {
   const letter = name.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
   return (
     <span
       aria-hidden
-      style={{ width: size, height: size }}
-      className="caps flex shrink-0 items-center justify-center rounded-full bg-icon-tile text-row text-black"
+      style={{ width: size, height: size, backgroundColor: label ? LABEL_TINT[label] : "#DDD5C6" }}
+      className="caps flex shrink-0 items-center justify-center rounded-full text-row text-black"
     >
       {letter}
     </span>
@@ -59,7 +59,7 @@ export const MerchantRow = forwardRef<HTMLButtonElement, Props>(function Merchan
       onClick={onClick}
       className="flex min-h-[76px] w-full items-center gap-3.5 rounded-row bg-white px-4 py-3 text-left"
     >
-      <Monogram name={name} />
+      <Monogram name={name} label={label} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="caps text-label text-black">
           {name.split(" ").map((w, i) => (

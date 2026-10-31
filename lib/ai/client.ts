@@ -73,7 +73,7 @@ export function buildExplainInput(m: Merchant, result: LabelResult, profile: Pro
     },
     ratings: m.ratings,
     label: result.label as Label,
-    reasons: result.reasons.map(strip),
+    reasons: result.reasons.map((p) => ({ ...strip(p), severe: result.severe.includes(p) })),
     notes: result.notes.map(strip),
     profile: { preferences: profile.preferences.map((p) => ({ label: p.label, importance: p.importance })) },
   };

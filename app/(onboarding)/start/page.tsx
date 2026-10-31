@@ -37,9 +37,11 @@ export default function StartPage() {
         animate={{ opacity: 1, scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
       >
-        <HalftoneCompass size={230} />
+        <HalftoneCompass size={230} color="#3171DD" accent="#3199DD" />
       </motion.div>
-      <h1 className="head mt-8 text-h1 text-black">See who your money reaches</h1>
+      <h1 className="head mt-8 text-h1 text-black">
+        See who your <span className="text-royal">money</span> reaches
+      </h1>
       <form
         className="mt-6"
         onSubmit={(e) => {

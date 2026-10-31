@@ -7,9 +7,9 @@ import { Lock, Shield, Trash } from "@/components/ui/icons";
 import { useUI } from "@/lib/store";
 
 const ROWS = [
-  { icon: Shield, text: "We never sell your data." },
-  { icon: Trash, text: "Encrypted, deletable in one tap." },
-  { icon: Lock, text: "Secure login through Plaid." },
+  { icon: Shield, text: "We never sell your data.", bg: "#E3ECFA", fg: "#3171DD" },
+  { icon: Trash, text: "Encrypted, deletable in one tap.", bg: "#FAEFD9", fg: "#B77D1C" },
+  { icon: Lock, text: "Secure login through Plaid.", bg: "#E0F0FA", fg: "#3199DD" },
 ];
 
 export default function LinkPage() {
@@ -18,14 +18,16 @@ export default function LinkPage() {
     <Screen footer={<PrimaryButton onClick={() => openSheet({ type: "bank" })}>Link with Plaid</PrimaryButton>}>
       <BackButton />
       <div className="mt-4">
-        <HalftoneCompass size={96} />
+        <HalftoneCompass size={96} color="#3171DD" accent="#3199DD" />
       </div>
-      <h1 className="head mt-6 text-h1 text-black">Link your bank</h1>
+      <h1 className="head mt-6 text-h1 text-black">
+        Link your <span className="text-royal">bank</span>
+      </h1>
       <ul className="mt-8 flex flex-col gap-3">
-        {ROWS.map(({ icon: Icon, text }) => (
-          <li key={text} className="flex min-h-[72px] items-center gap-4 rounded-row bg-fill px-5">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-tile bg-icon-tile">
-              <Icon size={22} />
+        {ROWS.map(({ icon: Icon, text, bg, fg }) => (
+          <li key={text} className="flex min-h-[72px] items-center gap-4 rounded-row border border-hairline bg-white px-5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-tile" style={{ backgroundColor: bg, color: fg }}>
+              <Icon size={22} strokeWidth={2} />
             </span>
             <span className="font-serif text-body text-black">{text}</span>
           </li>

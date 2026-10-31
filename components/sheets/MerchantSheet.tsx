@@ -8,7 +8,7 @@ import { LinkButton, SecondaryButton } from "../ui/Buttons";
 import { money2 } from "../ui/CountUp";
 import { Check, ExternalLink } from "../ui/icons";
 import { Monogram } from "../ui/MerchantRow";
-import { StatusMarker, StatusPill } from "../ui/Status";
+import { LABEL_TINT, StatusMarker, StatusPill } from "../ui/Status";
 import { SHEET_SPRING } from "../ui/BottomSheet";
 import { alternatives } from "@/data/alternatives";
 import { hasDifferentParent, merchantById, parentName } from "@/data/merchants";
@@ -25,6 +25,7 @@ const ISSUE_LABEL: Record<Issue, string> = {
   labor: "Labor",
   governance: "Governance",
   political: "Political",
+  privacy: "Privacy",
 };
 
 function EvidenceRow({ r }: { r: Rating }) {
@@ -40,7 +41,18 @@ function EvidenceRow({ r }: { r: Rating }) {
           {r.source} · {formatRatingDate(r.date)} · {r.scope === "parent" ? "Parent company" : "Merchant"}
         </p>
       </div>
-      <span className="num pt-0.5 text-label text-black">{r.score}/100</span>
+      <div className="flex w-[84px] shrink-0 flex-col items-end gap-1.5 pt-0.5">
+        <span className="num text-label text-black">{r.score}/100</span>
+        <span className="h-1.5 w-full overflow-hidden rounded-full bg-fill" aria-hidden>
+          <motion.span
+            className="block h-full rounded-full"
+            style={{ backgroundColor: r.score < 30 ? "#E05A2B" : r.score < 50 ? "#D4962A" : "#3171DD" }}
+            initial={{ width: 0 }}
+            animate={{ width: `${r.score}%` }}
+            transition={{ type: "spring", stiffness: 160, damping: 26, delay: 0.15 }}
+          />
+        </span>
+      </div>
       <a
         href={r.url}
         target="_blank"
@@ -111,13 +123,18 @@ export function MerchantSheet({ id }: { id: string }) {
 
   return (
     <div className="pt-1">
-      <header className="flex items-center gap-3.5">
-        <Monogram name={m.name} size={52} />
+      <header
+        className="-mx-6 -mt-1 flex items-center gap-3.5 px-6 py-4"
+        style={{ backgroundColor: generic ? "#F1ECE2" : LABEL_TINT[result.label] }}
+      >
+        <span className="rounded-full bg-white p-1">
+          <Monogram name={m.name} size={48} label={generic ? undefined : result.label} />
+        </span>
         <div className="min-w-0 flex-1">
           <h2 className="caps text-row text-black">{m.name}</h2>
           {hasDifferentParent(m) && <p className="font-serif text-caption text-ink-2">Owned by {parentName(m)}</p>}
         </div>
-        {generic ? <StatusPill generic={genericSummary(m)} /> : <StatusPill label={result.label} />}
+        {generic ? <StatusPill white generic={genericSummary(m)} /> : <StatusPill white label={result.label} />}
       </header>
 
       <p className="mt-5 font-serif text-body text-black">You spent {money2(spend)} this month.</p>
@@ -201,8 +218,10 @@ export function MerchantSheet({ id }: { id: string }) {
               {alts.fits.length > 0 ? (
                 <ul className="mt-3 flex flex-col gap-3">
                   {alts.fits.map((a) => (
-                    <li key={a.name} className="flex min-h-[76px] items-center gap-3.5 rounded-row bg-fill px-4 py-3">
-                      <Monogram name={a.name} />
+                    <li key={a.name} className="flex min-h-[76px] items-center gap-3.5 rounded-row bg-royal-tint px-4 py-3">
+                      <span className="rounded-full bg-white p-0.5">
+                        <Monogram name={a.name} label="Aligned" />
+                      </span>
                       <div className="min-w-0 flex-1">
                         <p className="caps truncate text-label text-black">{a.name}</p>
                         <p className="font-serif text-caption text-ink-2">

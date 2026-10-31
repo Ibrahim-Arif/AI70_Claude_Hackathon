@@ -18,9 +18,9 @@ export type DemoJump =
 
 export const DEMO_JUMPS: { id: DemoJump; label: string; key?: string }[] = [
   { id: "start", label: "Start", key: "1" },
-  { id: "home78", label: "Home (78%)", key: "2" },
+  { id: "home78", label: "Home (2 conflicts)", key: "2" },
   { id: "values", label: "Values tab", key: "3" },
-  { id: "home64", label: "Home (64%)", key: "4" },
+  { id: "home64", label: "Home (after Dealbreaker)", key: "4" },
   { id: "spending", label: "Spending", key: "5" },
   { id: "amazon", label: "Amazon sheet", key: "6" },
   { id: "reportNov", label: "Report November", key: "7" },
@@ -32,8 +32,11 @@ export const DEMO_KEYS: Record<string, DemoJump> = Object.fromEntries(
   DEMO_JUMPS.filter((j) => j.key).map((j) => [j.key!, j.id]),
 );
 
+/** What Home shows for Maya before she changes Worker treatment. */
+const BEFORE = { pct: 60, conflicts: 2, flagged: 7 };
+
 function ensurePersona() {
-  if (!useApp.getState().onboarded) useApp.getState().fillPersona("nice");
+  if (!useApp.getState().onboarded) useApp.getState().fillPersona("important");
 }
 
 export function runDemoJump(id: DemoJump, router: Router) {
@@ -55,13 +58,13 @@ export function runDemoJump(id: DemoJump, router: Router) {
       router.replace("/start");
       return;
     case "home78":
-      app.fillPersona("nice");
-      useApp.setState({ lastSeenPct: null, changeBaselinePct: null });
+      app.fillPersona("important");
+      useApp.setState({ lastSeen: null, changeBaseline: null });
       router.push("/home");
       return;
     case "home64":
       app.fillPersona("dealbreaker");
-      useApp.setState({ lastSeenPct: 78, changeBaselinePct: 78 });
+      useApp.setState({ lastSeen: BEFORE, changeBaseline: BEFORE });
       router.push("/home");
       return;
     case "values":

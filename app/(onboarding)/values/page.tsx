@@ -4,7 +4,7 @@ import { LayoutGroup, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Screen } from "@/components/Screen";
 import { BackButton, PrimaryButton } from "@/components/ui/Buttons";
-import { Plus, Sparkle, VALUE_ICONS } from "@/components/ui/icons";
+import { AddTile, ValueIcon } from "@/components/ui/ValueIcon";
 import { SelectionRow } from "@/components/ui/SelectionRow";
 import { useApp, useUI } from "@/lib/store";
 import { CATALOG } from "@/lib/values";
@@ -45,18 +45,20 @@ export default function ValuesPage() {
       }
     >
       <BackButton />
-      <h1 className="head mt-3 text-h1 text-black">What do you care about?</h1>
+      <h1 className="head mt-3 text-h1 text-black">
+        What do you <span className="text-royal">care</span> about?
+      </h1>
       <p className="mt-3 font-serif text-body text-ink-2">Optional. Pick any. Change it anytime.</p>
       <LayoutGroup>
         <motion.div layout className="mt-8 flex flex-col gap-3">
           {CATALOG.map((c) => {
-            const Icon = VALUE_ICONS[c.icon];
             return (
               <SelectionRow
                 key={c.id}
                 layout
-                icon={<Icon size={24} />}
+                icon={<ValueIcon id={c.id} />}
                 label={c.rowLabel}
+                caption={c.pref.type === "unsupported" ? "Not tracked yet" : undefined}
                 selected={selectedIds.includes(c.id)}
                 onToggle={() => toggle(c.id)}
               />
@@ -71,7 +73,7 @@ export default function ValuesPage() {
               transition={{ type: "spring", stiffness: 400, damping: 34 }}
             >
               <SelectionRow
-                icon={<Sparkle size={22} />}
+                icon={<ValueIcon id={c.id} />}
                 label={c.label}
                 caption={c.type === "unsupported" ? "In your words. Not tracked yet." : "In your words."}
                 selected={selectedIds.includes(c.id)}
@@ -79,7 +81,7 @@ export default function ValuesPage() {
               />
             </motion.div>
           ))}
-          <SelectionRow layout dashed icon={<Plus size={22} />} label="Add your own" onToggle={() => openSheet({ type: "add" })} />
+          <SelectionRow layout dashed icon={<AddTile />} label="Add your own" onToggle={() => openSheet({ type: "add" })} />
         </motion.div>
       </LayoutGroup>
     </Screen>

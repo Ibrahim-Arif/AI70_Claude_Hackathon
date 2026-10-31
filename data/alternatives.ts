@@ -1,6 +1,6 @@
 import type { Alternative, Issue, Rating } from "@/lib/types";
 
-function ratings(slug: string, climate: number, labor: number, governance: number): Rating[] {
+function ratings(slug: string, climate: number, labor: number, governance: number, political = 64, privacy = 68): Rating[] {
   const mk = (issue: Issue, score: number, source: string, date: string): Rating => ({
     issue,
     score,
@@ -13,6 +13,8 @@ function ratings(slug: string, climate: number, labor: number, governance: numbe
     mk("climate", climate, "Illustrative Climate Index", "2026-03"),
     mk("labor", labor, "Illustrative Labor Index", "2026-04"),
     mk("governance", governance, "Illustrative Governance Index", "2026-01"),
+    mk("political", political, "Illustrative Political Spending Index", "2026-02"),
+    mk("privacy", privacy, "Illustrative Privacy Index", "2026-03"),
   ];
 }
 
@@ -24,5 +26,6 @@ export const alternatives: Alternative[] = [
   { forMerchantId: "mcdonalds", name: "Green Plate Kitchen", availability: "regional", priceDeltaPct: 2, tags: ["restaurant"], ratings: ratings("greenplate", 64, 68, 62) },
   { forMerchantId: "shell", name: "Evergreen Fuel Co-op", availability: "regional", priceDeltaPct: 8, tags: ["fuel"], ratings: ratings("evergreen", 61, 70, 65) },
   { forMerchantId: "hm", name: "Thread Second", availability: "online", priceDeltaPct: -20, tags: ["clothing", "secondhand"], ratings: ratings("threadsecond", 80, 66, 63) },
+  { forMerchantId: "starbucks", name: "Common Ground Coffee", availability: "regional", priceDeltaPct: 3, tags: ["coffee"], ratings: ratings("commonground", 68, 74, 63) },
   { forMerchantId: "uber", name: "Valley Transit", availability: "regional", priceDeltaPct: -60, tags: ["transit"], ratings: ratings("valleytransit", 82, 70, 72) },
 ];

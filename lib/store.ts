@@ -7,7 +7,7 @@ import type { Goal, Importance, Preference, PriceBudget, Profile } from "./types
 import { CATALOG, catalogById, FAST_FOOD_PREF } from "./values";
 import { merchantById } from "@/data/merchants";
 import { transactions } from "@/data/transactions";
-import { changedMerchants, summarize } from "./engine";
+import { changedMerchants, flags, summarize } from "./engine";
 
 export type AIMode = "live" | "scripted";
 
@@ -24,11 +24,13 @@ type Persisted = {
   kept: string[];
   goal: Goal | null;
   aiMode: AIMode;
-  /** % the user last saw on Home (count-up starts here) */
-  lastSeenPct: number | null;
-  /** % before the user's latest values change (for "since you changed your values") */
-  changeBaselinePct: number | null;
+  /** What the user last saw on Home (count-ups start here) */
+  lastSeen: Snapshot | null;
+  /** What Home showed before the latest values change (for "since you changed your values") */
+  changeBaseline: Snapshot | null;
 };
+
+export type Snapshot = { pct: number | null; conflicts: number; flagged: number };
 
 type Actions = {
   set: (p: Partial<Persisted>) => void;
@@ -51,8 +53,8 @@ export const initialState: Persisted = {
   kept: [],
   goal: null,
   aiMode: "live",
-  lastSeenPct: null,
-  changeBaselinePct: null,
+  lastSeen: null,
+  changeBaseline: null,
 };
 
 export const useApp = create<Persisted & Actions>()(
@@ -76,7 +78,7 @@ export const useApp = create<Persisted & Actions>()(
         })),
       setImportance: (id, imp) => set((s) => ({ importance: { ...s.importance, [id]: imp } })),
       keep: (id) => set((s) => ({ kept: s.kept.includes(id) ? s.kept : [...s.kept, id] })),
-      fillPersona: (labor = "nice") =>
+      fillPersona: (labor = "important") =>
         set({
           ...initialState,
           aiMode: get().aiMode,
@@ -91,7 +93,7 @@ export const useApp = create<Persisted & Actions>()(
       reset: () => set({ ...initialState, aiMode: get().aiMode }),
     }),
     {
-      name: "tally-demo-v1",
+      name: "tally-demo-v2",
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -152,15 +154,22 @@ function useMemoProfile(
  */
 export function applyValuesChange(mutate: () => void): { changed: string[] } {
   const before = buildProfile(useApp.getState());
-  const beforePct = summarize(transactions, merchantById, before).alignmentPct;
+  const beforeSnap = snapshot(before, useApp.getState().kept);
   mutate();
   const state = useApp.getState();
   const after = buildProfile(state);
   const changed = changedMerchants(transactions, merchantById, before, after);
   if (changed.length) {
-    useApp.setState({ changeBaselinePct: state.lastSeenPct ?? beforePct });
+    useApp.setState({ changeBaseline: state.lastSeen ?? beforeSnap });
   }
   return { changed };
+}
+
+/** The numbers Home shows for a profile. */
+export function snapshot(profile: Profile, kept: string[]): Snapshot {
+  const s = summarize(transactions, merchantById, profile);
+  const conflicts = Object.entries(s.labels).filter(([id, l]) => l === "Conflicts" && !kept.includes(id)).length;
+  return { pct: s.alignmentPct, conflicts, flagged: flags(transactions, merchantById, profile, kept).length };
 }
 
 // ---------------------------------------------------------------- transient UI
@@ -203,5 +212,5 @@ export const useUI = create<UI>()((set) => ({
 
 // Demo shortcut: any URL with ?fill=maya loads Maya's profile before first render.
 if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fill") === "maya") {
-  useApp.getState().fillPersona("nice");
+  useApp.getState().fillPersona("important");
 }

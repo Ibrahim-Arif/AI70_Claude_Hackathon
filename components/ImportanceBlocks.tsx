@@ -1,15 +1,18 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { ImportanceSlider } from "./ui/ImportanceSlider";
 import { SegmentedControl } from "./ui/SegmentedControl";
+import { ValueIcon } from "./ui/ValueIcon";
 import { useApp, useProfile } from "@/lib/store";
 import type { Importance, PriceBudget } from "@/lib/types";
 import { isPreferRule } from "@/lib/values";
 
 const CAPTIONS: Record<Importance, string> = {
   nice: "We'll mention it, but won't flag anything.",
-  important: "We'll mark companies that fall short as Mixed.",
-  dealbreaker: "We'll flag any company that falls short.",
+  important: "We'll mark companies that fall short as Mixed, and ones far below as Conflicts.",
+  dealbreaker: "We'll flag any company that falls short as a Conflict.",
 };
 
 const THREE = [
@@ -43,6 +46,7 @@ export function ImportanceBlocks({
   const budget = useApp((s) => s.maxPriceIncreasePct);
   const changeImp = onImportance ?? setImportance;
   const changeBudget = onBudget ?? ((pct: PriceBudget) => set({ maxPriceIncreasePct: pct }));
+  const [preview, setPreview] = useState<{ id: string; v: Importance } | null>(null);
 
   return (
     <div className="flex flex-col">
@@ -50,11 +54,14 @@ export function ImportanceBlocks({
         {profile.preferences.map((p) => {
           const prefer = isPreferRule(p);
           const unsupported = p.type === "unsupported";
+          const level = preview?.id === p.id ? preview.v : p.importance;
           const caption = unsupported
             ? "Not tracked yet. We'll tell you when we have reliable data."
             : prefer
-              ? "We'll point out local places you already support."
-              : CAPTIONS[p.importance];
+              ? level === "nice"
+                ? "We'll quietly note local places you already support."
+                : "We'll point out local places you already support."
+              : CAPTIONS[level];
           return (
             <motion.section
               key={p.id}
@@ -63,37 +70,39 @@ export function ImportanceBlocks({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 34 }}
-              className="pb-8"
+              className="pb-7"
             >
-              <div className="mb-3 flex min-h-6 items-center justify-between gap-3">
-                <h2 className="caps text-label text-black">{p.label}</h2>
+              <div className="mb-2 flex min-h-11 items-center gap-3">
+                <ValueIcon id={p.id} size={36} />
+                <h2 className="caps flex-1 text-label text-black">{p.label}</h2>
                 {onRemove && (
                   <button
                     type="button"
                     onClick={() => onRemove(p.id)}
                     aria-label={`Remove ${p.label}`}
-                    className="-my-3 min-h-11 px-1 font-serif text-caption text-ink-2 underline underline-offset-4"
+                    className="min-h-11 px-1 font-serif text-caption text-ink-2 underline underline-offset-4"
                   >
                     Remove
                   </button>
                 )}
               </div>
               {!unsupported && (
-                <SegmentedControl
+                <ImportanceSlider
                   ariaLabel={`How much ${p.label} matters`}
                   options={prefer ? TWO : THREE}
                   value={prefer && p.importance === "dealbreaker" ? "important" : p.importance}
                   onChange={(v) => changeImp(p.id, v)}
+                  onPreview={(v) => setPreview(v ? { id: p.id, v } : null)}
                 />
               )}
-              <div className="relative mt-3 min-h-[42px]">
+              <div className="relative mt-2 min-h-[42px]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.p
                     key={caption}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
                     className="font-serif text-caption text-ink-2"
                   >
                     {caption}

@@ -106,7 +106,7 @@ export function DemoPanel() {
         <SecondaryButton onClick={() => runDemoJump("reset", router)}>Reset demo</SecondaryButton>
         <SecondaryButton
           onClick={() => {
-            fill("nice");
+            fill("important");
             close();
             router.push("/home");
           }}

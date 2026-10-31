@@ -10,7 +10,10 @@ export default function ImportancePage() {
   return (
     <Screen footer={<PrimaryButton onClick={() => router.push("/link")}>See my spending</PrimaryButton>}>
       <BackButton />
-      <h1 className="head mb-8 mt-3 text-h1 text-black">How much does each matter?</h1>
+      <h1 className="head mt-3 text-h1 text-black">
+        How much does each <span className="text-royal">matter</span>?
+      </h1>
+      <p className="mb-8 mt-3 font-serif text-body text-ink-2">Slide to set how strict we should be.</p>
       <ImportanceBlocks />
     </Screen>
   );

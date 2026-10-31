@@ -8,8 +8,15 @@ const COLORS: Record<Label, string> = {
 };
 
 /** 10px shape. Colors live only in the shape, never in text. */
-export function StatusShape({ label, size = 10 }: { label: Label; size?: number }) {
-  const c = COLORS[label];
+export const LABEL_TINT: Record<Label, string> = {
+  Aligned: "#E3ECFA",
+  Mixed: "#FAEFD9",
+  Conflicts: "#FBE5DC",
+  Unknown: "#F1ECE2",
+};
+
+export function StatusShape({ label, size = 10, onDark = false }: { label: Label; size?: number; onDark?: boolean }) {
+  const c = onDark && label === "Aligned" ? "#FFFFFF" : COLORS[label];
   return (
     <svg width={size} height={size} viewBox="0 0 10 10" aria-hidden className="shrink-0">
       {label === "Aligned" && <circle cx="5" cy="5" r="5" fill={c} />}
@@ -36,9 +43,12 @@ export function StatusMarker({ label }: { label: Label }) {
   );
 }
 
-export function StatusPill({ label, generic }: { label?: Label; generic?: GenericSummary }) {
+export function StatusPill({ label, generic, white = false }: { label?: Label; generic?: GenericSummary; white?: boolean }) {
   return (
-    <span className="inline-flex h-8 items-center gap-2 rounded-full bg-fill px-3.5">
+    <span
+      className="inline-flex h-8 shrink-0 items-center gap-2 rounded-full px-3.5"
+      style={{ backgroundColor: white ? "#FFFFFF" : label ? LABEL_TINT[label] : "#F1ECE2" }}
+    >
       {label && <StatusShape label={label} />}
       <span className="font-serif text-status text-ink-2">{label ?? generic}</span>
     </span>

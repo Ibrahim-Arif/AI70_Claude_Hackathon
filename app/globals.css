@@ -24,6 +24,10 @@
   --color-conflicts: #e05a2b;
   --color-unknown: #7a7468;
   --color-transparent: transparent;
+  /* Tints derived from the status colors, for a warmer, more colorful UI */
+  --color-amber-tint: #faefd9;
+  --color-coral-tint: #fbe5dc;
+  --color-amber-deep: #b77d1c;
 
   --font-display: var(--font-capriola), system-ui, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;
@@ -137,7 +141,7 @@ body {
 }
 
 .shimmer-bar {
-  background: linear-gradient(90deg, #f1ece2 0%, #e8e1d3 50%, #f1ece2 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #e3ecfa 50%, #ffffff 100%);
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 }

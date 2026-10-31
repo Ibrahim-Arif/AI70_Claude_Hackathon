@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+import { Sparkle } from "./icons";
 
 export function Shimmer({ lines = 3, label }: { lines?: number; label?: string }) {
   return (
@@ -43,8 +44,11 @@ function Typewriter({ text }: { text: string }) {
 /** "AI SUMMARY" label + italic serif text; shimmer while loading, then typewriter. */
 export function AISummary({ text, loading, label = "AI summary" }: { text: string | null; loading: boolean; label?: string }) {
   return (
-    <section className="rounded-row bg-cream px-4 py-4">
-      <p className="caps mb-2 text-micro text-ink-2">{label}</p>
+    <section className="rounded-row bg-royal-tint px-4 py-4">
+      <p className="caps mb-2 flex items-center gap-1.5 text-micro text-ink-2">
+        <Sparkle size={14} strokeWidth={2.2} className="text-royal" />
+        {label}
+      </p>
       <AnimatePresence mode="wait">
         {loading || !text ? (
           <motion.div key="s" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

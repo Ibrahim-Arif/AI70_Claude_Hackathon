@@ -113,7 +113,7 @@ export function AddSheet() {
                     setHistory(h);
                     run(h);
                   }}
-                  className="flex min-h-16 w-full items-center justify-between gap-3 rounded-row bg-fill px-5 py-3 text-left"
+                  className="flex min-h-16 w-full items-center justify-between gap-3 rounded-row bg-royal-tint px-5 py-3 text-left"
                 >
                   <span className="caps text-label text-black">{o}</span>
                   <ChevronRight size={18} />

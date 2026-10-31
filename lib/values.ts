@@ -23,21 +23,21 @@ export const CATALOG: CatalogEntry[] = [
     rowLabel: "Worker treatment",
     icon: "hands",
     pref: { id: "labor", label: "Worker treatment", type: "rating", rule: { kind: "rating", issue: "labor" } },
-    defaultImportance: "nice",
+    defaultImportance: "important",
   },
   {
     id: "political",
     rowLabel: "Political spending",
     icon: "columns",
     pref: { id: "political", label: "Political spending", type: "rating", rule: { kind: "rating", issue: "political" } },
-    defaultImportance: "nice",
+    defaultImportance: "important",
   },
   {
     id: "privacy",
     rowLabel: "Privacy",
     icon: "lock",
-    pref: { id: "privacy", label: "Privacy", type: "unsupported" },
-    defaultImportance: "nice",
+    pref: { id: "privacy", label: "Privacy", type: "rating", rule: { kind: "rating", issue: "privacy" } },
+    defaultImportance: "important",
   },
   {
     id: "animal",
@@ -74,7 +74,7 @@ export const FAST_FOOD_PREF: Omit<Preference, "importance"> = {
 };
 
 /** Maya's preferences after the scripted onboarding. */
-export function personaProfile(laborImportance: Importance = "nice"): Profile {
+export function personaProfile(laborImportance: Importance = "important"): Profile {
   return {
     name: "Maya",
     maxPriceIncreasePct: 5,

@@ -3,7 +3,7 @@
 import { LayoutGroup, motion } from "motion/react";
 import { ImportanceBlocks } from "@/components/ImportanceBlocks";
 import { Screen } from "@/components/Screen";
-import { Plus, Sparkle, VALUE_ICONS } from "@/components/ui/icons";
+import { AddTile, ValueIcon } from "@/components/ui/ValueIcon";
 import { SelectionRow } from "@/components/ui/SelectionRow";
 import { changeValues } from "@/lib/notify";
 import { useApp, useUI } from "@/lib/store";
@@ -50,23 +50,22 @@ export default function ValuesTab() {
           <h2 className="caps mb-3 text-label text-ink-2">{generic ? "Pick any" : "Add more"}</h2>
           <div className="flex flex-col gap-3">
             {unselectedCatalog.map((c) => {
-              const Icon = VALUE_ICONS[c.icon];
-              return (
-                <SelectionRow key={c.id} layout icon={<Icon size={24} />} label={c.rowLabel} selected={false} onToggle={() => toggle(c.id)} />
+            return (
+                <SelectionRow key={c.id} layout icon={<ValueIcon id={c.id} />} label={c.rowLabel} selected={false} onToggle={() => toggle(c.id)} />
               );
             })}
             {unselectedCustoms.map((c) => (
               <SelectionRow
                 key={c.id}
                 layout
-                icon={<Sparkle size={22} />}
+                icon={<ValueIcon id={c.id} />}
                 label={c.label}
                 caption="In your words."
                 selected={false}
                 onToggle={() => toggle(c.id)}
               />
             ))}
-            <SelectionRow layout dashed icon={<Plus size={22} />} label="Add your own" onToggle={() => openSheet({ type: "add" })} />
+            <SelectionRow layout dashed icon={<AddTile />} label="Add your own" onToggle={() => openSheet({ type: "add" })} />
           </div>
         </motion.div>
       </LayoutGroup>

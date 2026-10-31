@@ -1,4 +1,4 @@
-export type Issue = "climate" | "labor" | "governance" | "political";
+export type Issue = "climate" | "labor" | "governance" | "political" | "privacy";
 export type Importance = "nice" | "important" | "dealbreaker";
 
 export type Rating = {

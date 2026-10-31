@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { parents } from "@/data/merchants";
 
-export const ISSUES = ["climate", "labor", "governance", "political"] as const;
+export const ISSUES = ["climate", "labor", "governance", "political", "privacy"] as const;
 export const TAGS = [
   "fast_food",
   "fast_casual",
@@ -93,7 +93,14 @@ export const ExplainInputSchema = z.object({
     }),
   ),
   label: z.enum(["Aligned", "Mixed", "Conflicts", "Unknown"]),
-  reasons: z.array(z.object({ label: z.string(), importance: z.enum(["nice", "important", "dealbreaker"]), rule: z.any().optional() })),
+  reasons: z.array(
+    z.object({
+      label: z.string(),
+      importance: z.enum(["nice", "important", "dealbreaker"]),
+      rule: z.any().optional(),
+      severe: z.boolean().optional(),
+    }),
+  ),
   notes: z.array(z.object({ label: z.string(), importance: z.enum(["nice", "important", "dealbreaker"]), rule: z.any().optional() })),
   profile: z.object({
     preferences: z.array(z.object({ label: z.string(), importance: z.enum(["nice", "important", "dealbreaker"]) })),

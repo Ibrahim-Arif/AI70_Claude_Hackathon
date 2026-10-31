@@ -16,6 +16,8 @@ import type {
 import { IMPORTANCE_WORD } from "./values";
 
 export const PASS_SCORE = 50;
+/** Below this, a rating "falls far short": Conflicts even when the value is only Important. */
+export const FAR_SCORE = 30;
 export const STALE_MONTHS = 18;
 
 // ---------------------------------------------------------------- evaluate
@@ -41,6 +43,14 @@ export function evaluate(merchant: Merchant, pref: Preference): Evaluation {
   }
 }
 
+/** True when a rating-rule fail is far below the bar (score < FAR_SCORE). */
+export function isFarBelow(merchant: Merchant, pref: Preference): boolean {
+  const rule = pref.rule;
+  if (rule?.kind !== "rating") return false;
+  const r = merchant.ratings.find((x) => x.issue === rule.issue);
+  return !!r && r.score < FAR_SCORE;
+}
+
 // ---------------------------------------------------------------- label
 
 export type LabelResult = {
@@ -51,10 +61,12 @@ export type LabelResult = {
   notes: Preference[];
   /** prefer-rules this merchant satisfies ("supports your value") */
   supports: Preference[];
+  /** Important values that fell far short (score < 30), which raise the label to Conflicts */
+  severe: Preference[];
 };
 
 export function label(merchant: Merchant | undefined, profile: Profile): LabelResult {
-  if (!merchant) return { label: "Unknown", reasons: [], notes: [], supports: [] };
+  if (!merchant) return { label: "Unknown", reasons: [], notes: [], supports: [], severe: [] };
 
   const evals = profile.preferences.map((p) => ({ p, e: evaluate(merchant, p) }));
   const notes = evals.filter((x) => x.p.importance === "nice" && x.e === "fail").map((x) => x.p);
@@ -62,16 +74,26 @@ export function label(merchant: Merchant | undefined, profile: Profile): LabelRe
     .filter((x) => x.e === "pass" && x.p.rule?.kind === "attribute" && x.p.rule.polarity === "prefer")
     .map((x) => x.p);
 
-  const dealFails = evals.filter((x) => x.p.importance === "dealbreaker" && x.e === "fail");
-  if (dealFails.length) return { label: "Conflicts", reasons: dealFails.map((x) => x.p), notes, supports };
+  // 1. Any fail on a Dealbreaker, or a far-below fail on an Important value → Conflicts
+  const dealFails = evals.filter((x) => x.p.importance === "dealbreaker" && x.e === "fail").map((x) => x.p);
+  const severe = evals
+    .filter((x) => x.p.importance === "important" && x.e === "fail" && isFarBelow(merchant, x.p))
+    .map((x) => x.p);
+  if (dealFails.length || severe.length) {
+    return { label: "Conflicts", reasons: [...dealFails, ...severe], notes, supports, severe };
+  }
 
+  // 2. Any unknown on an Important or Dealbreaker → Unknown
   const unknowns = evals.filter((x) => x.p.importance !== "nice" && x.e === "unknown");
-  if (unknowns.length) return { label: "Unknown", reasons: unknowns.map((x) => x.p), notes, supports };
+  if (unknowns.length) return { label: "Unknown", reasons: unknowns.map((x) => x.p), notes, supports, severe };
 
+  // 3. Any fail on an Important → Mixed
   const importantFails = evals.filter((x) => x.p.importance === "important" && x.e === "fail");
-  if (importantFails.length) return { label: "Mixed", reasons: importantFails.map((x) => x.p), notes, supports };
+  if (importantFails.length) {
+    return { label: "Mixed", reasons: importantFails.map((x) => x.p), notes, supports, severe };
+  }
 
-  return { label: "Aligned", reasons: [], notes, supports };
+  return { label: "Aligned", reasons: [], notes, supports, severe };
 }
 
 /** Human sentence for the reasons line. */
@@ -83,8 +105,25 @@ export function reasonText(result: LabelResult): string | null {
   if (result.label === "Unknown") {
     return `No reliable rating yet for ${list}, which you marked as ${IMPORTANCE_WORD[result.reasons[0].importance]}.`;
   }
-  const imp = IMPORTANCE_WORD[result.reasons[0].importance];
-  return `Flagged because you marked ${list} as ${imp}.`;
+  const join = (ps: Preference[]) => {
+    const n = ps.map((p) => p.label);
+    return n.length === 1 ? n[0] : `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`;
+  };
+  const deal = result.reasons.filter((p) => p.importance === "dealbreaker");
+  const severe = result.severe;
+  if (result.label === "Conflicts") {
+    const parts: string[] = [];
+    if (deal.length) parts.push(`Flagged because you marked ${join(deal)} as a dealbreaker.`);
+    if (severe.length) {
+      parts.push(
+        deal.length
+          ? `It also falls far short on ${join(severe)}.`
+          : `Flagged because it falls far short on ${join(severe)}, which you marked as important.`,
+      );
+    }
+    return parts.join(" ");
+  }
+  return `Flagged because you marked ${list} as ${IMPORTANCE_WORD[result.reasons[0].importance]}.`;
 }
 
 // ---------------------------------------------------------------- generic mode

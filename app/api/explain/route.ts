@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       const payload = {
         merchant: input.merchant,
         label: input.label,
-        reasons: input.reasons.map((r) => ({ value: r.label, importance: r.importance })),
+        reasons: input.reasons.map((r) => ({ value: r.label, importance: r.importance, severe: !!r.severe })),
         notes: input.notes.map((r) => ({ value: r.label, importance: r.importance })),
         ratings: input.ratings.map((r) => ({ ...r, date: fmtDate(r.date), url: undefined })),
       };

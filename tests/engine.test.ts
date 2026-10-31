@@ -16,7 +16,7 @@ import { merchantById, merchants } from "@/data/merchants";
 import { transactions } from "@/data/transactions";
 import { alternatives } from "@/data/alternatives";
 import type { Importance, Preference, Profile } from "@/lib/types";
-import { personaProfile } from "@/lib/values";
+import { CATALOG, catalogById, personaProfile } from "@/lib/values";
 
 const labor = (importance: Importance): Preference => ({
   id: "labor",
@@ -123,12 +123,12 @@ describe("evaluate", () => {
 });
 
 describe("label: required cases", () => {
-  it("Labor Dealbreaker → Amazon Conflicts", () => {
+  it("Labor Dealbreaker → Amazon (labor 38) Conflicts", () => {
     const r = label(merchantById.amazon, profile(labor("dealbreaker")));
     expect(r.label).toBe("Conflicts");
     expect(reasonText(r)).toBe("Flagged because you marked Worker treatment as a dealbreaker.");
   });
-  it("Labor Important → Amazon Mixed", () => {
+  it("Labor Important → Amazon (labor 38) Mixed", () => {
     expect(label(merchantById.amazon, profile(labor("important"))).label).toBe("Mixed");
   });
   it("Labor Nice → Amazon Aligned, with a note", () => {
@@ -163,44 +163,89 @@ describe("label: required cases", () => {
   });
 });
 
-describe("summary with the persona", () => {
-  it("before: 78%, coverage 76%, 4 flags", () => {
-    const p = personaProfile("nice");
+describe("far below (score < 30) on an Important value", () => {
+  it("Climate Important → Shell (22) Conflicts, H&M (45) Mixed", () => {
+    const r = label(merchantById.shell, profile(climate("important")));
+    expect(r.label).toBe("Conflicts");
+    expect(reasonText(r)).toBe("Flagged because it falls far short on Climate, which you marked as important.");
+    expect(label(merchantById.hm, profile(climate("important"))).label).toBe("Mixed");
+  });
+  it("Climate Nice → Shell Aligned, with a note (nice never flags)", () => {
+    const r = label(merchantById.shell, profile(climate("nice")));
+    expect(r.label).toBe("Aligned");
+    expect(r.notes).toHaveLength(1);
+  });
+});
+
+describe("predictable conflicts", () => {
+  const rated = CATALOG.filter((c) => c.pref.type === "rating");
+  it.each(rated.map((c) => [c.id]))("%s alone at its default slider position gives at least one Conflict and one Mixed", (id) => {
+    const c = catalogById[id];
+    const p = profile({ ...c.pref, importance: c.defaultImportance });
     const s = summarize(transactions, merchantById, p);
-    expect(s.aligned).toBe(1186);
+    const labels = Object.values(s.labels);
+    expect(labels).toContain("Conflicts");
+    expect(labels).toContain("Mixed");
+    expect(labels).toContain("Aligned");
+    expect(labels).toContain("Unknown");
+  });
+  it("only Animal welfare is untracked in the catalog", () => {
+    expect(CATALOG.filter((c) => c.pref.type === "unsupported").map((c) => c.id)).toEqual(["animal"]);
+  });
+  it("Blue Bottle is Unknown when Political spending matters (no rating)", () => {
+    const c = catalogById.political;
+    expect(label(merchantById.bluebottle, profile({ ...c.pref, importance: "important" })).label).toBe("Unknown");
+  });
+});
+
+describe("summary with the persona", () => {
+  it("before: 60%, coverage 76%, 2 Conflicts + 5 Mixed = 7 flags", () => {
+    const p = personaProfile();
+    const s = summarize(transactions, merchantById, p);
+    expect(s.aligned).toBe(909);
+    expect(s.mixed).toBe(403);
+    expect(s.conflicts).toBe(208);
     expect(s.labeled).toBe(1520);
     expect(s.unknown).toBe(480);
     expect(s.total).toBe(2000);
-    expect(s.alignmentPct).toBe(78);
+    expect(s.alignmentPct).toBe(60);
     expect(s.coveragePct).toBe(76);
-    expect(flags(transactions, merchantById, p)).toEqual(["hm", "shell", "uber", "mcdonalds"]);
+    expect(flags(transactions, merchantById, p)).toEqual(["hm", "shell", "amazon", "uber", "wholefoods", "starbucks", "mcdonalds"]);
   });
 
-  it("after Labor → Dealbreaker: 64%, 6 flags, 3 changed", () => {
-    const before = personaProfile("nice");
+  it("after Worker treatment → Dealbreaker: 6 Conflicts, 1 Mixed, 4 changed", () => {
+    const before = personaProfile("important");
     const after = personaProfile("dealbreaker");
     const s = summarize(transactions, merchantById, after);
-    expect(s.aligned).toBe(973);
-    expect(s.labeled).toBe(1520);
-    expect(s.alignmentPct).toBe(64);
+    expect(s.conflicts).toBe(523);
+    expect(s.mixed).toBe(88);
+    expect(s.alignmentPct).toBe(60);
     const f = flags(transactions, merchantById, after);
-    expect(f).toHaveLength(6);
-    expect(f.slice(0, 3)).toEqual(["amazon", "wholefoods", "mcdonalds"]);
+    expect(f).toEqual(["amazon", "hm", "shell", "wholefoods", "starbucks", "mcdonalds", "uber"]);
     expect(changedMerchants(transactions, merchantById, before, after).sort()).toEqual(
-      ["amazon", "mcdonalds", "wholefoods"],
+      ["amazon", "mcdonalds", "starbucks", "wholefoods"],
     );
+  });
+
+  it("after Worker treatment → Nice: 75%, Shell still Conflicts, Amazon gets a note", () => {
+    const p = personaProfile("nice");
+    const s = summarize(transactions, merchantById, p);
+    expect(s.alignmentPct).toBe(Math.round(((909 + 140 + 73 + 64) / 1520) * 100));
+    expect(label(merchantById.shell, p).label).toBe("Conflicts");
+    expect(label(merchantById.amazon, p).notes.map((x) => x.id)).toEqual(["labor"]);
   });
 
   it("Keep it removes from flags but not from the percentage", () => {
     const p = personaProfile("dealbreaker");
     expect(flags(transactions, merchantById, p, ["amazon"])).not.toContain("amazon");
-    expect(summarize(transactions, merchantById, p).alignmentPct).toBe(64);
+    expect(summarize(transactions, merchantById, p).alignmentPct).toBe(60);
   });
 
   it("shows 'not enough data' when coverage < 20%", () => {
-    const p = profile({ id: "pol", label: "Political spending", type: "rating", rule: { kind: "rating", issue: "political" }, importance: "important" });
-    const s = summarize(transactions, merchantById, p);
-    expect(s.coveragePct).toBe(0);
+    const local = new Set(["coop", "maple", "juniperthai", "riverside", "parking", "spotify"]);
+    const txs = transactions.filter((t) => t.merchantId && local.has(t.merchantId));
+    const s = summarize(txs, merchantById, profile(climate("important")));
+    expect(s.coveragePct).toBeLessThan(20);
     expect(s.alignmentPct).toBeNull();
   });
 });
@@ -223,6 +268,9 @@ describe("alternatives at +5%", () => {
     const r = alternativesFor("amazon", alternatives, p);
     expect(r.fits.map((a) => a.name)).toEqual(["Northwind Goods"]);
     expect(r.overBudgetCount).toBe(1);
+  });
+  it("H&M shows Thread Second (secondhand, -20%)", () => {
+    expect(alternativesFor("hm", alternatives, p).fits.map((a) => a.name)).toEqual(["Thread Second"]);
   });
   it("Shell has no option within budget", () => {
     expect(alternativesFor("shell", alternatives, p).fits).toHaveLength(0);

@@ -30,17 +30,15 @@ export function SelectionRow({
       whileTap={{ scale: 0.98 }}
       onClick={onToggle}
       className={`relative flex min-h-[84px] w-full items-center gap-4 rounded-row px-5 text-left ${
-        dashed ? "border-2 border-dashed border-ink-3 bg-transparent" : "bg-fill"
-      }`}
+        dashed ? "border-2 border-dashed border-royal/50 bg-transparent" : selected ? "bg-royal-tint" : "bg-white"
+      } transition-colors duration-200`}
     >
       <span
         className={`pointer-events-none absolute inset-0 rounded-row border-2 transition-colors duration-200 ${
-          selected ? "border-black" : "border-transparent"
+          selected ? "border-royal" : dashed ? "border-transparent" : "border-hairline"
         }`}
       />
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-tile ${dashed ? "bg-fill" : "bg-icon-tile"}`}>
-        {icon}
-      </span>
+      {icon}
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="caps text-row text-black">{label}</span>
         {caption && <span className="font-serif text-caption text-ink-2">{caption}</span>}
@@ -52,7 +50,7 @@ export function SelectionRow({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 22 }}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-royal text-white"
           >
             <Check size={16} strokeWidth={2.6} />
           </motion.span>

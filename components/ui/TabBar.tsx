@@ -34,9 +34,20 @@ export function TabBar() {
               <Link href={t.href} aria-current={active ? "page" : undefined} className="block h-full">
                 <motion.span
                   whileTap={{ scale: 0.94 }}
-                  className="flex h-full flex-col items-center justify-center gap-1"
+                  className="flex h-full flex-col items-center justify-center gap-0.5"
                 >
-                  <TabIcon i={i} active={active} />
+                  <span className="relative flex h-8 w-14 items-center justify-center">
+                    {active && (
+                      <motion.span
+                        layoutId="tab-pill"
+                        className="absolute inset-0 rounded-full bg-royal-tint"
+                        transition={{ type: "spring", stiffness: 400, damping: 34 }}
+                      />
+                    )}
+                    <span className="relative">
+                      <TabIcon i={i} active={active} />
+                    </span>
+                  </span>
                   <span className={`caps text-tab ${active ? "text-royal" : "text-ink-2"}`}>{t.label}</span>
                 </motion.span>
               </Link>
